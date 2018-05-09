@@ -19,6 +19,7 @@
 
 
 holdoutFraction = 0;  % for holdout/ensemble testing
+nullDist = 'trial';   % trial for trial scramble, time for time scramble
 
 %% GC Prep variables that may change between runs
 
@@ -186,9 +187,8 @@ for e = 1:enobs
     
     % Calculate GC for window
     a  = autocov_to_spwcgc(G,fres); % rate limiting step
-    sizeOfa = size(a,3);
     specGC(e,:,:,1:size(a,3)) = a;
-    timeGC(:,:,e) = squeeze(sum(specGC(e,:,:,1:floor(nBins/5)),4))./(nBins/5); % up to ~60Hz (nyq/5)
+    timeGC(:,:,e) = squeeze(sum(specGC(e,:,:,1:floor(nBins/5)),4))./(nBins/5); % up to (nyq/5)
     if isbad(a,false)
         fprintf(2,' *** skipping - GC calculation failed\n');
         badCalcs(e) = 1;
@@ -208,6 +208,24 @@ toc
 % represent windows with leading edge
 offset = modelOrder + windowSize;
 specTime = t(offset:end);
+
+
+%% INSERT SCRAMBLES HERE
+origSpecGC = specGC;
+origTimeGC = timeGC;
+
+shuffleCount = 3;
+
+if strcmp(nullDist,'trial')
+    nullDistScript_trialShuffle % outputs specGC_perm and timeGC_perm
+    nullDistSpecGC = mean(specGC_perm,1);
+    specGC = origSpecGC - nullDistSpecGC;
+elseif strcmp(nullDist,'time')
+    nullDistScript_timeScramble % outputs specGC_perm and timeGC_perm
+    nullDistSpecGC = mean(specGC_perm,1);
+    specGC = origSpecGC - nullDistSpecGC;
+end
+
 %% plot results
 
 numVar = size(specGC,2);
@@ -272,7 +290,7 @@ disp('Saving...')
 clearvars -except AIC BIC cueString dnobs doHP doNotch DS dur fname freqs fres...
     fs inTargVal maxGC modelOrder numVar outputFileName pointsPerEval specGC ...
     specTime startTime t timeGC timeTime windowSize X channelsToUse supChans...
-    intChans deepChans trialNums
+    intChans deepChans trialNums origSpecGC origTimeGC specGC_perm timeGC_perm
 
 biplabel = '';
 if strcmp(outputFileName(1:3),'Bip')

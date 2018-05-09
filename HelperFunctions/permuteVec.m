@@ -6,10 +6,7 @@ function [ permutedVector ] = permuteVec( vecLength, chunkQuant )
 
 chunkSize = vecLength/chunkQuant;
 if mod(chunkSize,1) ~= 0
-    %extraTime = (chunkSize - floor(chunkSize))*chunkQuant;
     chunkSize = floor(chunkSize);
-%else
-    %extraTime = 0;
 end
 
 chunks = zeros(chunkQuant, chunkSize);
