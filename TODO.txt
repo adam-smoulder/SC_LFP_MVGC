@@ -1,0 +1,553 @@
+----------------TODO-------------------
+	
+--------
+Current plan - downsample to 1Khz, FwdBack notch @ 60 & 322.5, 8th order HPF @ 1Hz
+
+TODO for real things: 
+
+From lab meeting:
+
+- Held out data? 
+	- 1. Try splitting one dataset into two; do the separate distributions look similar to the total?
+		(((+ Nope; see the split check...
+			+ correction - this was buggy, see below...)))
+		- control: does scrambling the trial order affect anything...?
+			+ nope, phew
+		+ So how many trials held out does it take to reshape/change the GC?	
+			+ the more trials you hold out, the more different it is... shocker.
+			+ the average of multiple held out sets though seems to get close to the original
+				+ this held for both quintiles and halves
+				+ for quintiles, you see each quintile holds the mostly salient activity of the final result - cool!
+- Nonlinearities??? Nonlinear VAR model estimation
+- Detrending jazz part 7
+- Split data into time sections (i.e. delay vs. event) what does the MO do?
+	+ looking pre-target, MO is low...though this also happens if you look post target
+	+ weird. Try this with saccade? Find the bounds of it? Delay period?
+- Latency between
+- Dotted line for saccade end
+	- where's that at...?
+- Run with lower window size!!! whole question of timing for saccade
+	+ Kinda see better temporal dynamics on 083017; 
+	- lets try Time MVGC
+- Send corentin LFP flips and weird stuff from 072315
+- do GC on 1-3 + 2-4 + 3-5...14-16... or maybe just down to 10-12
+	+ this would reflect poorly for 1-3 on 3-5 for example... test gc between two identical signals?
+- ASK Corentin about alignment for data
+- run more data
+	+ show metrics, 12 datasets run
+- Make CSDs for all data, see if aligned?
+- Try CAR?
+- Try scaling individual channels (test data)
+- Try running MVGC on individual trials, then averaging
+	+ So try averaging before then MVGC on ensemble vs. MVGC on each trial then ensemble vs. original method
+	+ setup; try it
+- Try w/ and w/o detrend stuff
+- ASK BYRON ABOUT AVERAGING INFORMATION METRICS
+
+		
+- investigate ND_bl_sc_112515_targlfp_MO_62_intarg_1
+	+ odd that it shows such GC before the target onset...
+- Do lower order, small window MVGC on saccade (or just time MVGC!)
+
+
+- diff sampling freqs
+	- 500Hz results seem nearly same as 1Khz!
+	
+
+- try MO est with no high pass
+	+ HP makes no difference to MO estimation
+	+...then why do it?
+- show magnitude of frequency bands!!
+- Try over all datasets
+
+
+------
+TO DO NOW:
+
+- See detrending effect on GC for real data (do w/ and w/o)
+- move bipolar subtraction to first step?
+	- then do detrend before/after
+	
+	 	Isolate (rawData->rawDataGoodChan) -> Filter (rawDataGoodChan->lfp)
+		-> Align (lfp->sacctargmat) -> Detrend? (sacctargmat->sacctargmat) -> BiP (sacctargmat->bip) 
+		-> Detrend? (bip->bip) -> Downsample (bip->procData) -> Run
+		
++++ Found noise lines at 60, 300, 321.8, 14276, 14919.6 
+	+ in GC, there's noise (w/no downsample) at ~4800 and 9600Hz... only in the GC though :/
+		+ this shows up around 500Hz in the downsampled version...
+
+++ moests are consistent within a dataset (overall: try both?)
+	+ 080415 showed minimum ~22, another dip ~60
+	+ 071215 showed elbow at ~24, but minimum was ~60
+	+ This theme stays consistent....
+
++ THING TO TRY: on play data, do low order MVGC, then do higher order; subtract 2?
+	+ maybe just try higher order mvgc...? -> have 130 MO saved, just shows very localized activity
+	+ check channels for most datasets...idk if the lfps we're nabbing are good
+	+ anecdotally - the worse the lfps look, the less prevalent the ~24ms lag MO is, the more the 60 is
+		+ nvm 072315_2 disproves this
+		
+		
+		
+
+- NEXT SCHRITCK - 3/19 - run 2 6 and 10 on original dataset
+	+ also try other bip sub for channels!
+
+- SO CSD for 0723151 and 2 are aligned, though MVGC looks very different... consider
+	- using the same channels, checked
+	- no detrend? 	
+		+ the two still look completely different at MO 22
+		+ at MO 59 -> still look completely different (look similar to MO22)
+	- with detrend 2?
+		+ same, though GC values are lower for 1. Still no similarity
+	- with detrend 1?
+		+ sgrams look weirder
+	- trial scramble?
+		+ 
+	- outtarg?
+		+ nothing of note
+
+
+
+
+Ideas to try:
++ PRIORITY - try aligning via iCSD ( see corentin's stuff, make sure to run correctly!)
+	+ plot_csdtrials is the command!!!! just pass in the meanblahblah data, 1:16, then 5 []s 
+	-> get more data and see what GCs are similar v. what lfp/csds are similar?
++ normalize GC before averaging ???
+	-> try median also instead!
+- run diff channels in same paradigm?
+	+ try average over all bipolar subtraction combinations
+		+ ... (1-2 + 1-3) + (2-1 + 2-3) + (3-1 + 3-2) = 0. I'm dumb.
+	+ att #2 : do (1-3 + 2-4)/2, so references are removed and all channels are included
+		+ same as before essentially. Some differences but nothing of note. much lower GC values, noisier
++ try on lukes!
+	 + cleaner but same trends
+- check channels for all - saw some bad stuff on 072315 channel 7 for instance.
+	+ bad or odd? Remove? can't lpf :/
+		+ THIS WAS JUST SPIKING ACTIVITY
++ SSGC?
+	+ produces similar, albeit less noisy results? wouldn't rely on it...
+		+ slightly faster
+- remove trial shuffle from all
+
+
+
+
+
+
+	
+
+--- ONCE ANALYSIS IS SET UP -----
+
+chain datasets together to better characterize noise bands
+
+
+For Mega run:
+- First, filter data, save good datasets WITH NO RAW DATA FIELD!!!!
+- Get Sgrams beside LFPs, save data & images (pre and post 1st diff!)
+- Run 60th order...? save all MVGC resulting data and images (ONLY PLOT TO 100!), don't save unneeded shit (like sortedData lol) 
+	- Fourier transform for magnitude in window we care about (time integral)
+	- Time MVGC zoom in? like layered. idk
+- Do intarg and outtarg
+- Subtractor extractor
+- Pretty plot...?
+
+While mega run:
+- write averaging script; get stdevs!!!!
+- integrate over time-window, look at mag vs. freq (fourier transform of that tiny window)
+	+ basic idea done, see localSpectralMagnitude
+		- frequency values are noisy - perhaps use full-time series spectral MVGC (fourier transform) ?
+	- see if diff communication lines "talk" at different frequencies
+- IDEA FOR PLOTTING: look at "relationships" sup -> mid, mid->deep etc., integrate over appropriate bands and show relationship
+	- Window area of interest in time (400 to 800 for saccade, 350 to 750 for target)
+- IDEA FOR VISUALIZATION:  Lemon paper -> spectrogram normalized by frequency bands	
+- Other analysis methods
+	- Look at phase-coupling is meaningful if coherence is meaningful
+		- Thatcher R.W. "Coherence phase differences phase shift and phase lock in eeg analyses" Dev. neuropsychology, vol. 37, pg 476, 2012
+- Adam organize some pretty summary of data (kinda done?)
+	- Use correct channels -> difference of LFPs, avg over trials
+- Effect of filtering on play data?
+
+
+
+---- LOW PRIORITY -----
+
+BEFORE mega run:
+- clean up cpu space and data
+- clear all old stuff out
+- make new methods for running the whole shabang
+- try MO thing with downsampling?
+	- MO settles at 970ms long model order (i.e. for fs = 100Hz, MO = 97) per AIC...
+	- Derivative of MO settles at 630ms
+	- BUT if you zero pad extensively (excessively), MO settles at 400ms for saccade onset - this is with 6th order fwdback HP @ 3hz
+		- No HP? 720ms, though 400ms is bottom of elbow for saccade onset
+		- No HP target = 360ms
+	- TRY DIFFERENT DOWNSAMPLING W/ INFLECTION POINT MODEL ORDER
+	+ the result of all of this was that it looked like these crazy things but we saw inflection points around the 30ish range
+
+CLEAN UP ALL
+- Perform analysis over more channels (?)
+- Granger Causality Detrending - window size? how do?
+- Bandpass
+	- GC does nonlinear stuff though? we should def check out!
+	- do time domain MVGC! we shouldn't have 300hz bs now
+
+- source control??
+
+- other TFDs?
+	
+- Try PW on all
+
+- Bolluminta, Schroeder, and Ding - 1st spatial difference GC (J. Neurosci)
+
+
+
+
+FROM MEETING WITH DR. DEVARAJAN 12/14/17:
+- for null dist: Scramble phase? Blocks of time
+- for Model order derivative (state space) -> common to see this type of model order trail off w/ eeg, lfps from single unit, along with “v-shape”
+- Perhaps bandpass stuff?
+- First difference is A-OK
+	+ lol Dr. Barnett says nah fam
+- paper: Gamma Oscillations Are Generated Locally in an Attention-Related Midbrain Network
+- local folks doing this stuff: Pascal Fries, Bastos
+- better than multitaper..? -> Matching Pursuit
+
+
+
+
+
+*** Temporally demean time series data |X|, which may be single- or
+  multi-trial. If the |normalise| flag is set, data is normalised so that
+  the (temporal) variance of each series is 1.
+ 
+  *_Note:_* For multi-trial data we don't demean on a "per-trial" basis,
+  since this really doesn't make sense... trials in multi-trial data are
+  assumed to be multiple realisations of the same process. In particular,
+  demeaning trials separately can introduce large bias in VAR model
+  estimation (_cf._ <tsdata_to_var.html |tsdata_to_var|>). The mean
+  calculated here is thus the temporal mean of ensemble means. If you feel
+  you absolutely have to demean per-trial, then call this function for each
+  trial series |X(:,:,r)| _and then_ call it with |X|.
+  
+  
+  ---- ON HOLD ---- 
+  
+  - CHECK STATE SPACE JAZZ
+	+ looks like approach may be:
+		XXX1. Get VAR model from MVGC (tsdata_to_var -> A is the var model, SIG is the Covariance matrix
+			+ if you use the VAR model, the result is the exact same as normal, as seen by the rhob = 0 (which I think means the state space explains no more than var?)
+		1. Use the CCA algorithm to estimate State-space (should try this on examples first)....
+		2. get SS innovations coefficients from ssgc (ar2iss)
+	+ tried on 1000Hz, no detrend data
+		+ VERY SLOW!!! overnight didn't finish for 60th order (no detrend)
+			+ this was because of mega mistakes - using wrong variable - ignore
+	+ TRY ON DETRENDED DATA WITH DIFFERENT MODELS
+	
+	
+	
+	
+	
+	
+	
+
+---- Recently done ---- 
+
+- Email barnett about detrend vs demean
+	- also about "harmonics" in MO estimation
+	+ he said normal, doesn't follow if demeaning would keep time stuff
+- Try notching at 45Hz, 100Hz see if GC happens there
+	+ doesn't
+	+ does nothing to MO estimation
+	+ unrelated - the 322Hz notch doesn't seem to affect anything MO est wise
+- BUT not notching?
+	- Odd results... see slides for no notch vs. no harmonics et al.
+
+- Weak stationarity; constant ensemble means/variances (detrending)
+	USE detrendTesting.m TO SHOW EFFECT OF DETRENDING
+	- mvgc method (mvdetrend) before bipolar subtraction: 
+		+ 1st deg = just demeans by the look? so the same as what we have...
+			+ MO doesn't settle (looks normal)
+		+ 2nd deg = looks no different...
+			+ Looks about the same at a glance
+		+ 5th deg = looks a bit more stationary? 
+			+ Doesn't settle the MO...
+		+ so I tried 25 and it still doesnt change...
+		+ ultimately just used our own detrend
+
+- CSD calc - on hold for the moment
+		- Try averaging methods; (i.e. select 1, take a couple around the channel points, etc) figure out best way (identify source/sink)
+		- look up GC with CSD?
+			- Pulkit Grover, seemed positive but no answers on this q
+			- Months later, no follow up :(
+		- Wait till we sort out this data mess of filtering
+
+Model order estimation:
+	- 1KHz, no detrend - 18 with notable minima at 35, 53, 68
+	- 1KHz, detrend after bip sub - 53, 68 is close
+	- 500Hz, no detrend - 9, notable minima at 26 and 34
+	- 500Hz, detrend after bip sub - 9 with very near minima at 26 and 34
+
+
+- Try on other datasets
+	- wait till analysis is confirmed
+	- ADAM NAG UDAY FOR DATA
+	
+- Understanding differenced v. normal
+	- MOOT - differencing is non-invertible - shouldn't be used unless stochastic drift is observed
+	- Look at differenced signal vs. normal signal sgrams!
+		+ no HP: differenced is much noisier, seems to pull out the power of the higher frequencies that are kinda overshadowed in normal's DC
+		+ vs HP: as you HP, the differences look essentially the same (with lower frequencies removed), though the non-differenced signals
+		readjust based on the new maximum power - which tends to align with the difference. 
+	- Directly compare GC from differenced vs not!!!
+		+ very similar after HP, looks like same idea as LFPs (noisier, brings out "quieted" activity more) - see ppt
+	- Look at examples of differencing on MVGC results for examples!!	
+	
+- try general division by const on post-subtract ensembleMean (post bip subtraction) -> same range as detrend, does it do better on MO est?
+		+ wtf it worked (divided by 10.4, which is the mean stdev overall) - same result as dividing by ensembleStdev
+		+ if you just subtract ensemble mean -> nothing happens, it never settles
+		+ if you divide by 100 -> MO settles at 5
+		+ if you don't subtract ensemble mean and divide by ensemble stdev -> looks same as if ensemble was subtracted
+		+ no ensemble mean subtract, divide by 10.4 -> looks same as if ensemble was subtracted
+		+ no ensemble mean subtract, divide by 100 -> looks same as if ensemble was subtracted
+	- This ^ is odd and problematic. detrendTesting.m shows how the detrending vs scaling works
+		- ADAM TO DO: 1. try to learn why scaling affects model order like this, 2. investigate mvdetrend
+		+ So on examples, scaling also affects model order similarly, though on our things it's pretty easy to tell
+		+ Better example: use the new and improved NonstationaryTestGen and LDinMVGC_Ex4; MO is actually 20
+			+ no scaling or anything -> get 15 but with notable minimum at 20
+			+ using homeDetrend -> picks 20, pseudopick 16
+			+ you divide by 10 -> "2"	
+			+ multiply by 10 -> doesn't settle (NOTE: Derivative flatlines after 20)
+			+ /10 then homeDetrend -> picks 20, pseudopick 16
+			+ *10 then homeDetrend -> picks 20, pseudopick 16
+				+ tried changing true MO to 17, same result.
+			+ multiply one AFFECTED channel by 100 -> doesn't settle
+				+ same for affector
+		+++ HYPOTHESIS:  Data should be z-scored (standard dev is 1) for most accurate model order estimation. 
+			+ more specifically, scaling data up causes overestimation, scaling data down causes underestimation
+			To check:
+				- Scale one function but not another, see how GC is affected, see how MO approx is affected
+					+ scale eq 3 (only affected, affects no one) - same result as scaling everything
+					+ fails estimation, rank deficient matrix
+				- how GC is affected by scaling
+				- how GC is affected by detrend
+				- investigate mvdetrend
+				
+				
+		- Send email to Dr. Barnett
+		- try to find other model order AIC/BIC code
+				- Check fieldtrip
+		- try other examples
+	
+- Validate results of high MO and differenced MVGC with permutation test sets!
+	- Run permutation test on 60th order stuff -> show normal MVGC results side-by-side with permutation runs' average. maybe just do a few at first
+		+ lol see pics, spectral domain results are kinda funny, long story short we're good
+
+- Email - concise - LPF? Notching/DS safe? avoiding false positive (we saw bands and shit) 
+    - Redo with focus on model order
+    	- Go to example stuff, run model order estimation, show overestimates, figure
+	- ask about difference as well (implications on info transfer; how to interpret?)
+		+ Drafted
+		
+		- Reading:
+			- The effect of filtering on Granger causality based multivariate causality measures
+			- tl;dr - low pass filtering artificially increases model order = more error = don't do it, notching is okay, watch out for decimating
+				- looking at 2.5-48Hz, uses sPDC instead of MVGC for stats purposes
+				- LOOM? Something to look into
+				- Fig 1 - Our current method is probs ~ upper right corner stuff
+					- Phase neutral filtering = bad ???
+					- So introduces false positives; not a ton but def some...
+					- Fig 2 says same
+					"This indicates that with filtering, the RP
+					underestimates the significance threshold. Note that the results of
+					PDC and sPDC with RP are identical"
+				- Fig 3 - LOOM but w/e - phase neutral filtering = ouch :(
+					- higher order filters is more false detection...
+				- Fig 4 - Ohhh phase neutral is actually better; just cut your order of filter in half
+				- Fig 6 - notch should be fine
+					- Decimating greater than minimum time lag = bad....hm
+				- Fig 7 - don't LPF, HPF for 1hz is fine to remove DC, notch is fine
+				
+- QUESTION: data permutation pre vs post filtering?	
+	- After seems safer, closer to analysis
+- Double check alignment of channels
+
+- Do permutation test (in time)
+	- For randomization of all time within a trial - much higher than expected... some overlap
+		-THIS WAS MAINTAINING THE SAME TIME INDEX PERMUTATION OVER TRIALS
+	- See how random windows of time works?
+		- expected; up GC of randos with up window size
+	- PERMUTE TIME VECTOR OVER CHANNELS!!
+		- Shows what we expected; more significance than just single permutation repeated
+		- Though still not as significant as trial shuffle... why????? Trying on examples
+	- Do it on examples ( low prior )
+		- It appears that time permutation has higher mvgc than trial shuffle... needs confirmed
+	- look into how MVGC handles trials? concats, avg, etc?
+		- NOTE: MVGC doc recommends not demeaning by trial (as Seth recommended)... see below***	
+			- We can address this once we get the raw data?
+		- Concatenates all in a row for both unlagged and lagged data -> makes VAR model -> Get autocov from that...errr am lost.
+		- To be continued...
+	- do limited trial sets -> see if random permutation stuff works
+		- shows less difference between real and null (as Steve predicted) for only 5 trials
+			- reason being bias; when you have less trials, you'll have higher variance -> higher correlated MVGC vals
+		- CHECK MATH
+	- time permutation seems to work, but check out LOOM as possible other method of control!
+	- SEE SETH'S PAPER - people do trial shuffle and this, regardless both seem viable/useful for validation
+	
+- Try High pass at 0.1Hz and at 5Hz
+	- See TestHP - 0.5Hz attenuates DC well without hurting 1Hz and above much, we could try 1Hz too
+	- On real data, 0.1 does weird weird stuff, 0.5 is weird too...
+	- be cognizant of Frequency Resolution on TFDs... 
+		- Seems odd
+	- DO COMPARISONS OF HIGH PASS FOR EACH THING TO THEIR LFP AVGs
+		- See HP5 - not expected result :/ 
+	- SEE SETH'S FIGURE -> HP and difference until stationary?
+	- Differencing for stationarity -> KPSS says yes (what does that mean...?), though MO still doesn't settle
+		- Estimate MO in each window? -> tried, doesn't help
+		- Interesting result -> push to MO60 and interesting result. Try with no difference?
+		
+- CHECK DEMEANING STUFF!!!
+	- do trial demeaning again BEFORE channel difference (do sgrams of these!) -> try KPSS!
+			- No HP, with trial mean removed, fails KPSS :(
+		- Try doing it with no High-Pass! see what happens
+			- Still no dice - needs that first difference
+	- if needed, still difference
+		- if it is still needed, visualize it via sgrams
+			- done - see one random trial, sgrams for trial average are bs (bc 0)
+		- MVGC on trial demeaned and differenced, all hp and not.
+			- All came out super noisey :/
+		- Since demeaning by the trial mean doesn't improve stationarity, nix it
+			- we see this visually; i.e. you have a trial with a super strong response, itll still show up = not stationary
+			
+- TRYING STUFF-   NOTE 300Hz band = 322Hz (also called ex notch)
+			- "Normal" = low passed filtfilt, notched = no visible bands
+			- Normal vs no notch filtering (only low pass)
+				- Spectrogram - no 300hz band, 60hz there, kinda ugly
+				- GC - Bands on bands....all show 230Hz high, 130Hz, and like 20Hz...?
+			- Normal vs no low pass (only notch) NOT DONE YET
+				- Spectrogram - 
+				- GC - 
+			- Normal vs no filtering
+				- Spectrogram - 300Hz band and 60Hz band
+				- GC - 
+			- No filtfilt - use 4th order BW
+				- Spectrogram - band ~300Hz
+				- GC - enormous 300Hz band... and if you look close you see a 240 bandish
+					- postulation: Low-Pass shifts frequencies of noise...? so notch first
+			- No filtfilt - manually forward backwards filter
+				- not tried
+			- DS3 
+				- Spectrogram - oooo pretty time res + same 300 hz band
+				- GC - odd... band for sure @ "600Hz" then a bunch elsewhere
+					- need higher fft length, window size, ppe, etc...?
+			- DS3, Notch 60, no LPF (hypothetical "best")
+				- Spectrogram - as expected, no 60Hz band, 300 is still there
+				- GC - lookin fucky...hm.
+					- Note model order
+			- DS3, Notch 60 AND 322, no LPF (backup hypothetical best)
+				- Spectrogram - looks same as DS30
+				- GC - Looks same as DS30
+			- Email Seth/Ding
+				- Prefiltering (no notches) LFPs GC
+				- Postfiltering LFPs GC
+		-NOTCHING make larger scaling factor at higher frequency
+		- higher MO for DS3
+			- When this is controlled for, results are same as DS30
+				- MEANING we can use 1kHz data safely!
+-Try no bipolar subtraction
+	- no bipolar subtraction -> use 2, 6, 10 
+		- saccade: no BiP has wayyyy higher GC vals, differs from BiP subtraction (i.e. 2->1, 1->2) but similar on some (i.e. 2->3, 3->1)
+		- target:  no BiP has higher vals, some similar (1->2, 1->3), others not (2->3, 3->2)
+-Do spectrogram of LFPs, bip difference, see if difference in the band
+	- there wasn't
+	- Note: Window size changing did not affect 300Hz band
+- try lower/higher MO?
+	 - higher MO didn't show much different :(
+- Try lower fres
+	- complains of lower resolution just cause some truncation; it's nbd, though doesn't increase speed of operation greatly on decrease
+- Trial Shuffle
+	- Do NOT shuffle channels amongst each other; shuffle a channel between different trials
+		- random distribution, 1st iteration = 1st Bootstrap
+		- Did trial shuffling (hold channel same; shuffle trials randomly) - 5 shuffles, 5th order
+			-from what's shown, the randoms are almost always not near the real values	
+	- Try plots of signals (post bip subtraction) before/after shuffle
+		- The plots post shuffle look fine; see lfpPlotter script
+		- Choose how many of the randos to show
+- not done, but learned
+	- "Bootstrapping" - randomly pick trial 1 with trial 4, perform GC, see results
+		- this should show what is bullshit (chance) or what is caused just by stimulus; do real GC and see if results go above that
+		- There's an example called mvgc_bootstrapping that produces confidence intervals of both 
+		  bootstrapped and normal data distributions.
+		  	- It seems to show the same confidence interval in the example that the data does...implying the results are spurious?
+		  	- errr idt this is what we're looking for. This is taking subsets of data. See next bullet point
+		- selon Michelle, trial shuffling is different!
+			- Bootstrapping is taking ~2/3 of your data randomly, analyzing, pick another random 2/3, repeat...
+			- Normally used if you have small datasets; probs not a problem for us
+	- look at what kinda stats they use in MVGC
+		- See mvgc_demo - Calculate p-value using F-test or X^2; evaluate significance with "correction"
+			- FDR? FDRD? seems promising
+			- Added it in, we can see how it goes
+-Downsample -> see if 300Hz band is still there
+	- Downsample vs decimate -> downsample keeps variance better, though we could try both
+	- Downsample -> the band is still there, shows up at 75hz as expected
+		-escalate issue about filtering beforehand
+	- Decimate -> weird, weird shit.
+
+
+-----------------INFO------------------
+Data started with is already demeaned within each trial.
+Order of operation:
+1) In vs out targ -> 2) demean by average over all trials. -> 3) Bipolar subtraction -> 4) MVGC
+If desired, the following occur where stated:
+- Downsampling: before 2)
+	- should be done on least-tampered with data possible; step 1 just sorts a bit
+- CSD calculation: before 2)
+	- must be done on actual LFP data, before possible influences are removed
+- Trial Shuffle: before 4)
+	- ensures subtraction occurs within trial before shuffle
+- Bandpass filtering: before 2)
+	- should be done as early on as possible.
+
+
+To run MVGC scripts on the data:
+1. startup MVGC toolbox (ToolboxFiles/mvgc_v1.0/startup.m)
+2. Go to Project/1_MasterScripts and select the master script with the conditions you wish to use
+	- i.e. Time domain analysis with trial average demeaned = “master_condMVGC_TD_LFP_Demeaned.m”
+3. Run change the monkey_date parameter if desired or load data separately, either should work
+4. Run the selected script
+
+
+
+Parameter names and file paths for saves:
+
+projectRoot = project folder location
+analysisType = 'cond' or 'pw'
+monkey_date = 'bb_sc_150804' or whatever monkey/date it is
+domain = 'SD', 'TD', or 'TDbySum'
+signalType = 'lfp' or 'spike'
+cueType = 'saccade', 'go', or 'target'
+cueString = 'sacc', 'targ', 'go'
+inTargString = 'intarg', 'outtarg', 'in-out', 'in-outtarg'
+axisLimit = number of the max GC value shown on plots
+axisLimitString = conversion to filename-friendly string for axisLimit
+
+
+
+for individual cue figures:
+
+folder name:
+strcat(projectRoot,'/FiguresAndResults/',analysisType,'/',monkey_date,'/',domain,'/',signalType,'/IndividualCues/',cueType)
+file name:
+strcat(analysisType,'_',monkey_date,'_',domain,'_',signalType,'_',cueType,'_',inTargString,'_',demeaned,axisLimitString) % (only use axis limit if in fig)
+
+
+
+for combined cue figures:
+
+folder name:
+strcat(projectRoot,'/FiguresAndResults/',analysisType,'/',monkey_date,'/',domain,'/',signalType,'/CombinedCues/',axisLimitString)
+file name:
+strcat(analysisType,'_',monkey_date,'_',domain,'_',signalType,'_',inTargString,'_',demeaned,axisLimit);
+
+
