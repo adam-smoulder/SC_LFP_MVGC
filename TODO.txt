@@ -18,32 +18,52 @@ From lab meeting:
 			+ the average of multiple held out sets though seems to get close to the original
 				+ this held for both quintiles and halves
 				+ for quintiles, you see each quintile holds the mostly salient activity of the final result - cool!
+				+ median of quintiles is also close to average
+				+ POINT: doing MVGC on full dataset is good
+		- Try running MVGC on individual trials, then averaging
+			+ So try averaging before then MVGC on ensemble vs. MVGC on each trial then ensemble vs. original method
+			+ cant do individual trials but it holds for quintiles
+		- NOW check the quintile thing... we see that only one of them has a huge bit before the target. What does it mean? check out these trials
+- Removing null distribution!!
+- 25 MO averages? We have the data just do it
 - Nonlinearities??? Nonlinear VAR model estimation
-- Detrending jazz part 7
+- Detrending jazz part 7...
 - Split data into time sections (i.e. delay vs. event) what does the MO do?
 	+ looking pre-target, MO is low...though this also happens if you look post target
 	+ weird. Try this with saccade? Find the bounds of it? Delay period?
 - Latency between
-- Dotted line for saccade end
-	- where's that at...?
+- Dotted line for saccade end 
+	- where's that at...? (sOffT)
 - Run with lower window size!!! whole question of timing for saccade
+	+ ADAM TRY USING 20 (look at saccade length - we want to be ~ 1/2 that!)
 	+ Kinda see better temporal dynamics on 083017; 
 	- lets try Time MVGC
+		+ setup, timeMVGCPipeline, window of 5 is slow but works
+			+ showed very noisy result? odd...though this could just be time MVGC. let's try window 10?
+			+ 
 - Send corentin LFP flips and weird stuff from 072315
+- Try CAR?
+	+ it does something...idk what exactly though...
 - do GC on 1-3 + 2-4 + 3-5...14-16... or maybe just down to 10-12
 	+ this would reflect poorly for 1-3 on 3-5 for example... test gc between two identical signals?
+		+ two identical signals doesn't work, rank deficient matrices...
+		+ BUT you can lag a signal by 2, see nonstationaryTestGen5 with LDinMVGC_Ex2_Att2
+			+ crazy high GC
+		+ interestingly - adding a common noise process to both (regardless of sign) does indeed induce causality
+		+ ADAM WE WANT TO DO AN EXAMPLE SCENARIO OF BIPOLAR SUBTRACTION
+	+ for now, doing "full bip" : 1-3, 2-4, 5-7, 6-8, 9-11....
+		+ did target for 080415, looks interesting. Some parts similar to normal, some not
+			+ RUN ON ALL POSSIBLE AND AVERAGE
+			+ perhaps try just the "relevant" channels (1-12)?
 - ASK Corentin about alignment for data
 - run more data
 	+ show metrics, 12 datasets run
 - Make CSDs for all data, see if aligned?
-- Try CAR?
 - Try scaling individual channels (test data)
-- Try running MVGC on individual trials, then averaging
-	+ So try averaging before then MVGC on ensemble vs. MVGC on each trial then ensemble vs. original method
-	+ setup; try it
 - Try w/ and w/o detrend stuff
 - ASK BYRON ABOUT AVERAGING INFORMATION METRICS
-
+- run 2 6 and 10 on original dataset - compare to standard?
+	+ also try other bip sub for channels!
 		
 - investigate ND_bl_sc_112515_targlfp_MO_62_intarg_1
 	+ odd that it shows such GC before the target onset...
@@ -62,36 +82,16 @@ From lab meeting:
 
 
 ------
-TO DO NOW:
+TO TRY?
 
-- See detrending effect on GC for real data (do w/ and w/o)
 - move bipolar subtraction to first step?
 	- then do detrend before/after
-	
 	 	Isolate (rawData->rawDataGoodChan) -> Filter (rawDataGoodChan->lfp)
 		-> Align (lfp->sacctargmat) -> Detrend? (sacctargmat->sacctargmat) -> BiP (sacctargmat->bip) 
 		-> Detrend? (bip->bip) -> Downsample (bip->procData) -> Run
 		
-+++ Found noise lines at 60, 300, 321.8, 14276, 14919.6 
-	+ in GC, there's noise (w/no downsample) at ~4800 and 9600Hz... only in the GC though :/
-		+ this shows up around 500Hz in the downsampled version...
 
-++ moests are consistent within a dataset (overall: try both?)
-	+ 080415 showed minimum ~22, another dip ~60
-	+ 071215 showed elbow at ~24, but minimum was ~60
-	+ This theme stays consistent....
-
-+ THING TO TRY: on play data, do low order MVGC, then do higher order; subtract 2?
-	+ maybe just try higher order mvgc...? -> have 130 MO saved, just shows very localized activity
-	+ check channels for most datasets...idk if the lfps we're nabbing are good
-	+ anecdotally - the worse the lfps look, the less prevalent the ~24ms lag MO is, the more the 60 is
-		+ nvm 072315_2 disproves this
 		
-		
-		
-
-- NEXT SCHRITCK - 3/19 - run 2 6 and 10 on original dataset
-	+ also try other bip sub for channels!
 
 - SO CSD for 0723151 and 2 are aligned, though MVGC looks very different... consider
 	- using the same channels, checked
@@ -206,7 +206,7 @@ CLEAN UP ALL
 
 FROM MEETING WITH DR. DEVARAJAN 12/14/17:
 - for null dist: Scramble phase? Blocks of time
-- for Model order derivative (state space) -> common to see this type of model order trail off w/ eeg, lfps from single unit, along with “v-shape”
+- for Model order derivative (state space) -> common to see this type of model order trail off w/ eeg, lfps from single unit, along with ?v-shape?
 - Perhaps bandpass stuff?
 - First difference is A-OK
 	+ lol Dr. Barnett says nah fam
@@ -254,6 +254,21 @@ FROM MEETING WITH DR. DEVARAJAN 12/14/17:
 
 ---- Recently done ---- 
 
++++ Found noise lines at 60, 300, 321.8, 14276, 14919.6 
+	+ in GC, there's noise (w/no downsample) at ~4800 and 9600Hz... only in the GC though :/ not sure how to deal? probs just ignore...
+		+ this shows up around 500Hz in the downsampled version...
+
+++ moests are consistent within a dataset (overall: try both?)
+	+ 080415 showed minimum ~22, another dip ~60
+	+ 071215 showed elbow at ~24, but minimum was ~60
+	+ This theme stays consistent....
+	
++ THING TO TRY: on play data, do low order MVGC, then do higher order; subtract 2?
+	+ maybe just try higher order mvgc...? -> have 130 MO saved, just shows very localized activity
+	+ check channels for most datasets...idk if the lfps we're nabbing are good
+	+ anecdotally - the worse the lfps look, the less prevalent the ~24ms lag MO is, the more the 60 is
+		+ nvm 072315_2 disproves this
+		
 - Email barnett about detrend vs demean
 	- also about "harmonics" in MO estimation
 	+ he said normal, doesn't follow if demeaning would keep time stuff
@@ -513,7 +528,7 @@ If desired, the following occur where stated:
 To run MVGC scripts on the data:
 1. startup MVGC toolbox (ToolboxFiles/mvgc_v1.0/startup.m)
 2. Go to Project/1_MasterScripts and select the master script with the conditions you wish to use
-	- i.e. Time domain analysis with trial average demeaned = “master_condMVGC_TD_LFP_Demeaned.m”
+	- i.e. Time domain analysis with trial average demeaned = ?master_condMVGC_TD_LFP_Demeaned.m?
 3. Run change the monkey_date parameter if desired or load data separately, either should work
 4. Run the selected script
 
