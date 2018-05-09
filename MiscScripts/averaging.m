@@ -1,4 +1,6 @@
-normie = 0;
+% script for averaging together spectral GC sets
+
+normie = 0; % if 1, normalizes max GC of each dataset to 1 pre-averaging
 
 % names = [...
 %     'bb_sc_070915_targlfp_inTarg_1_MO_65_wind_100_1000hz.mat';
@@ -37,32 +39,32 @@ thenamesForHere = [...
 %     'bl_sc_031115_sacclfp_MO_62_intarg_1.mat';
 %     'bl_sc_112515_sacclfp_MO_62_intarg_1.mat';
 %     'bl_sc_083017_sacclfp_MO_62_intarg_1.mat';
-%
-%     'ND_bb_sc_031315_targlfp_MO_25_intarg_0.mat'; % some acausal target?
-%     'ND_bb_sc_070915_targlfp_MO_25_intarg_0.mat';
-%     'ND_bb_sc_071215_targlfp_MO_25_intarg_0.mat';
-%     'ND_bb_sc_080415_targlfp_MO_25_intarg_0.mat';
-%     'ND_bb_sc_082917_targlfp_MO_25_intarg_0.mat';
-%     'ND_bb_sc_121415_targlfp_MO_25_intarg_0.mat';
-%     'ND_bl_sc0723151_targlfp_MO_25_intarg_0.mat';
-%     'ND_bl_sc0723152_targlfp_MO_25_intarg_0.mat'; % virtually no sacc response?
-%     'ND_bl_sc_031115_targlfp_MO_25_intarg_0.mat';
-%     'ND_bl_sc_071415_targlfp_MO_25_intarg_0.mat';
-%     'ND_bl_sc_083017_targlfp_MO_25_intarg_0.mat'; % noise band around 180?
+
+    'ND_bb_sc_031315_targlfp_MO_25_intarg_1.mat'; % some acausal target?
+    'ND_bb_sc_070915_targlfp_MO_25_intarg_1.mat';
+    'ND_bb_sc_071215_targlfp_MO_25_intarg_1.mat';
+    'ND_bb_sc_080415_targlfp_MO_25_intarg_1.mat';
+    'ND_bb_sc_082917_targlfp_MO_25_intarg_1.mat';
+    'ND_bb_sc_121415_targlfp_MO_25_intarg_1.mat';
+    'ND_bl_sc0723151_targlfp_MO_25_intarg_1.mat';
+    'ND_bl_sc0723152_targlfp_MO_25_intarg_1.mat'; % virtually no sacc response?
+    'ND_bl_sc_031115_targlfp_MO_25_intarg_1.mat';
+    'ND_bl_sc_071415_targlfp_MO_25_intarg_1.mat';
+    'ND_bl_sc_083017_targlfp_MO_25_intarg_1.mat'; % noise band around 180?
 %     %'ND_bl_sc_112515_targlfp_MO_62_intarg_1.mat'; % acausal target???
-% %     
-    'ND_bb_sc_031315_sacclfp_MO_25_intarg_0.mat';
-    'ND_bb_sc_070915_sacclfp_MO_25_intarg_0.mat';
-    'ND_bb_sc_071215_sacclfp_MO_25_intarg_0.mat';
-    'ND_bb_sc_080415_sacclfp_MO_25_intarg_0.mat';
-    'ND_bb_sc_082917_sacclfp_MO_25_intarg_0.mat';
-    'ND_bb_sc_121415_sacclfp_MO_25_intarg_0.mat';
-    'ND_bl_sc0723151_sacclfp_MO_25_intarg_0.mat';
-    %'ND_bl_sc0723152_sacclfp_MO_62_intarg_1.mat';
-    'ND_bl_sc_031115_sacclfp_MO_25_intarg_0.mat';
-    'ND_bl_sc_071415_sacclfp_MO_25_intarg_0.mat';
-    'ND_bl_sc_083017_sacclfp_MO_25_intarg_0.mat';
-    'ND_bl_sc_112515_sacclfp_MO_25_intarg_0.mat';
+% % %     
+%     'ND_bb_sc_031315_sacclfp_MO_25_intarg_1.mat';
+%     'ND_bb_sc_070915_sacclfp_MO_25_intarg_1.mat';
+%     'ND_bb_sc_071215_sacclfp_MO_25_intarg_1.mat';
+%     'ND_bb_sc_080415_sacclfp_MO_25_intarg_1.mat';
+%     'ND_bb_sc_082917_sacclfp_MO_25_intarg_1.mat';
+    %'ND_bb_sc_121415_sacclfp_MO_25_intarg_1.mat';
+%     'ND_bl_sc0723151_sacclfp_MO_25_intarg_1.mat';
+%     %'ND_bl_sc0723152_sacclfp_MO_62_intarg_1.mat';
+%     'ND_bl_sc_031115_sacclfp_MO_25_intarg_1.mat';
+%     'ND_bl_sc_071415_sacclfp_MO_25_intarg_1.mat';
+%     'ND_bl_sc_083017_sacclfp_MO_25_intarg_1.mat';
+%     'ND_bl_sc_112515_sacclfp_MO_25_intarg_1.mat';
     ...
 %     'bb_sc_031315_targlfp_MO_62_intarg_1.mat'; % target
 %     'bb_sc_070915_targlfp_MO_62_intarg_1.mat';

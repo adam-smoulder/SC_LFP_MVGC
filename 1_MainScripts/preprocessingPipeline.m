@@ -25,7 +25,7 @@
 
 %% PARAMETERS TO EDIT BEFORE RUNNING
 
-fname = 'bl_sc_083017_mcell_spikelfp_cSC.mat';  % dataset file name
+fname = 'bb_sc_080415_mcell_spikelfp_cSC.mat';  % dataset file name
 channelsToUse = [1 3; 5 7; 9 11];              % not "bad channels"
 detrend = 2;                    % 0 = no detrend, 1 = pre-bip, 2 = post-bip
 fs = 1000;                      % sampling rate of new data (Hz)
