@@ -117,6 +117,7 @@ fprintf('\nbest model order (AIC) = %d\n',moAIC);
 fprintf('best model order (BIC) = %d\n',moBIC);
 
 modelOrder = moAIC;
+clear X4mo
 
 %% Setup for MVGC
 % Performs Multivariate Granger Causality using the MVGC toolbox
@@ -150,10 +151,9 @@ nBins = fres+1;                                 % found mostly experimentally...
 stepsize = (fs/2)/nBins;                        % max frequency is fs/2 (Nyquist)
 freqs = 0:stepsize:(fs/2)-stepsize;             % frequency values
 badCalcs = zeros(1,enobs);                      % record where calculations fail
-
-%%                    
-specGC = zeros(enobs,nvars,nvars,nBins);          % dims:  time, eq1, eq2, freq
-timeGC = zeros(nvars, nvars, enobs);              % dims:  eq1, eq2, time
+                  
+specGC = zeros(enobs,nvars,nvars,nBins);        % dims:  time, eq1, eq2, freq
+timeGC = zeros(nvars, nvars, enobs);            % dims:  eq1, eq2, time
 
 %% "Vertical" regression GC calculation
 disp('Beginning GC  calculation')
@@ -219,15 +219,24 @@ origTimeGC = timeGC;
 shuffleCount = 5;
 dispNullDists = 1;
 
+% find null distribution (or set to 0 if not desired)
 if strcmp(nullDist,'trial')
     nullDistScript_trialShuffle % outputs specGC_perm and timeGC_perm
-    nullDistSpecGC = mean(specGC_perm,1);
-    specGC = origSpecGC - nullDistSpecGC;
 elseif strcmp(nullDist,'time')
     nullDistScript_timeScramble % outputs specGC_perm and timeGC_perm
-    nullDistSpecGC = mean(specGC_perm,1);
-    specGC = origSpecGC - nullDistSpecGC;
+else 
+    specGC_perm = zeros([shuffleCount size(specGC)]);
 end
+
+% update spec and time GC based on null dist
+nullDistSpecGC = mean(specGC_perm,1);
+specGC = origSpecGC - nullDistSpecGC;
+timeGC = origTimeGC - nullDistTimeGC;
+
+% negative and imaginary values are uninterpretable, so:
+% find real part, then make 0 for all neg. vals
+specGC = max(0,real(specGC)); 
+timeGC = max(0,real(timeGC));
 
 %% plot results
 
