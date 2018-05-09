@@ -19,10 +19,10 @@ specGC_perm = zeros([shuffleCount,size(specGC)]); % scrambled GCs
 timeGC_perm = zeros([shuffleCount, size(timeGC)]);
 badCalcsPerm = zeros(shuffleCount,enobs);    % record where calculations fail
 
-dispNullDist = 0;   % show spectrograms of permuted distributions
+dispNullDists = ternaryOp(exist('dispNullDists','var'),dispNullDists,0); % default if needed
 shuffleCount = ternaryOp(exist('shuffleCount','var'),shuffleCount,5); % default if needed
 
-%% Time scramble and GC cals
+%% Time scramble and GC calcs
 
 for k=1:shuffleCount
     disp(['Time Permutation ' num2str(k)])

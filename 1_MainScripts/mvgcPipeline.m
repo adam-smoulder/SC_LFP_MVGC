@@ -17,18 +17,17 @@
 % bl 083017:
 
 
-
-holdoutFraction = 0;  % for holdout/ensemble testing
-nullDist = 'trial';   % trial for trial scramble, time for time scramble
-
 %% GC Prep variables that may change between runs
 
 cueString = 'sacclfp';  % cue to use
 inTargVal = 1;          % intarg vs outtarg vs both
 analysisType = 'cond';  % 'cond' = conditional, 'pw' = pairwise
 
-% Setup for GC
+holdoutFraction = 0;  % for holdout/ensemble testingl; 0 for using all data
+nullDist = 'trial';   % trial for trial scramble, time for time scramble
 
+
+% Setup for GC
 icregmode = 'OLS';  % information criteria regression mode ('OLS', 'LWR' or empty for default)
 momax     = 70;     % maximum model order for model order estimation
 
@@ -40,10 +39,9 @@ nobs  = dur*fs+1;       % number of observations in a trial
 tnobs = nobs+dnobs;     % total observations per trial for time series generation
 k = 1:tnobs;            % vector of time steps
 
-monkey_data = fname(1:12);          % 
+monkey_data = fname(1:12);          % used for file naming and such
 axisLimit = 0;                      % if 0, axisLimit = maxGC (only used for subtractorExtractor)
-downsampleFactor = 1000/fs;         % takes 1khz -> 250hz % HACK fix later
-
+downsampleFactor = 1000/fs;         % HACK fix later
 
 %% Isolate desired data
 
@@ -56,15 +54,19 @@ switch inTargVal
     otherwise
         dataToUse = data;
 end
+%dataToUse = dataToUse(randperm(length(dataToUse))); % scramble trial order
 
-%dataToUse = dataToUse(randperm(length(dataToUse))); % scramble order
-holdoutLength = ceil(holdoutFraction*length(dataToUse))+1;
-useLength = length(dataToUse)-holdoutLength;
-dataToUse = dataToUse(holdoutLength:end); % only take subset
+
+% remove held out data if desired
+if holdoutLength
+    holdoutLength = ceil(holdoutFraction*length(dataToUse))+1;
+    useLength = length(dataToUse)-holdoutLength;
+    dataToUse = dataToUse(holdoutLength:end); % only take subset
+end
 
 % specifically isolate the cue we want to analyze
 [nChannels, nTime] = size(dataToUse(1).sacclfpmat);
-nTrials = length(dataToUse);  % updated now for in vs. outtarg
+nTrials = length(dataToUse);
 X = nan(nChannels, nTime, nTrials);
 if strcmp(cueString,'targlfp')
     X = reshape([dataToUse.targlfpmat],size(X));
@@ -210,11 +212,12 @@ offset = modelOrder + windowSize;
 specTime = t(offset:end);
 
 
-%% INSERT SCRAMBLES HERE
+%% Calculate null distribution and subtract it
 origSpecGC = specGC;
 origTimeGC = timeGC;
 
-shuffleCount = 3;
+shuffleCount = 5;
+dispNullDists = 1;
 
 if strcmp(nullDist,'trial')
     nullDistScript_trialShuffle % outputs specGC_perm and timeGC_perm
