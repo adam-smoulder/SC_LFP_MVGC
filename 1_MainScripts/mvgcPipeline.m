@@ -24,7 +24,7 @@ inTargVal = 1;          % intarg vs outtarg vs both
 analysisType = 'cond';  % 'cond' = conditional, 'pw' = pairwise
 
 holdoutFraction = 0;  % for holdout/ensemble testingl; 0 for using all data
-nullDist = 'trial';   % trial for trial scramble, time for time scramble
+nullDistChoice = 'trial';   % trial for trial scramble, time for time scramble
 
 
 % Setup for GC
@@ -219,17 +219,20 @@ origTimeGC = timeGC;
 shuffleCount = 5;
 dispNullDists = 1;
 
+nullDistChoice = ternaryOp(exist('nullDistChoice','var'),nullDistChoice,''); % default it
+
 % find null distribution (or set to 0 if not desired)
-if strcmp(nullDist,'trial')
+if strcmp(nullDistChoice,'trial')
     nullDistScript_trialShuffle % outputs specGC_perm and timeGC_perm
-elseif strcmp(nullDist,'time')
+elseif strcmp(nullDistChoice,'time')
     nullDistScript_timeScramble % outputs specGC_perm and timeGC_perm
 else 
     specGC_perm = zeros([shuffleCount size(specGC)]);
 end
 
 % update spec and time GC based on null dist
-nullDistSpecGC = mean(specGC_perm,1);
+nullDistSpecGC = squeeze(mean(specGC_perm,1));
+nullDistTimeGC = squeeze(mean(timeGC_perm,1));
 specGC = origSpecGC - nullDistSpecGC;
 timeGC = origTimeGC - nullDistTimeGC;
 
@@ -302,7 +305,8 @@ disp('Saving...')
 clearvars -except AIC BIC cueString dnobs doHP doNotch DS dur fname freqs fres...
     fs inTargVal maxGC modelOrder numVar outputFileName pointsPerEval specGC ...
     specTime startTime t timeGC timeTime windowSize X channelsToUse supChans...
-    intChans deepChans trialNums origSpecGC origTimeGC specGC_perm timeGC_perm
+    intChans deepChans trialNums origSpecGC origTimeGC specGC_perm timeGC_perm ...
+    nullDistChoice
 
 biplabel = '';
 if strcmp(outputFileName(1:3),'Bip')

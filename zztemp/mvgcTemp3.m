@@ -17,6 +17,8 @@
 % bl 112515: 25 (62 is good)
 % bl 083017: 
 
+nullDistChoice = 'trial';
+
 %% GC Prep variables that may change between runs
 
 % cueString = 'sacclfp';  % cue to use
@@ -95,12 +97,13 @@ clear dataToUse;
 % fprintf('\nbest model order (AIC) = %d\n',moAIC);
 % fprintf('best model order (BIC) = %d\n',moBIC);
 
-modelOrder = 62;
 
 %% Setup for MVGC
 % Performs Multivariate Granger Causality using the MVGC toolbox
 % if different model order desired, use following line:
-% modelOrder = 62; 
+modelOrder = 25;
+
+disp(['Model order is ' num2str(modelOrder)]);
 
 % Parameters that should not change between runs
 regmode   = 'OLS';          % VAR model estimation regression mode ('OLS', 'LWR' or empty for default - 'OLS')
@@ -190,6 +193,36 @@ toc
 % represent windows with leading edge
 offset = modelOrder + windowSize;
 specTime = t(offset:end);
+
+%% Calculate null distribution and subtract it
+origSpecGC = specGC;
+origTimeGC = timeGC;
+
+shuffleCount = 3;
+dispNullDists = 0;
+
+nullDistChoice = ternaryOp(exist('nullDistChoice','var'),nullDistChoice,''); % default it
+
+% find null distribution (or set to 0 if not desired)
+if strcmp(nullDistChoice,'trial')
+    nullDistScript_trialShuffle % outputs specGC_perm and timeGC_perm
+elseif strcmp(nullDistChoice,'time')
+    nullDistScript_timeScramble % outputs specGC_perm and timeGC_perm
+else 
+    specGC_perm = zeros([shuffleCount size(specGC)]);
+end
+
+% update spec and time GC based on null dist
+nullDistSpecGC = squeeze(mean(specGC_perm,1));
+nullDistTimeGC = squeeze(mean(timeGC_perm,1));
+specGC = origSpecGC - nullDistSpecGC;
+timeGC = origTimeGC - nullDistTimeGC;
+
+% negative and imaginary values are uninterpretable, so:
+% find real part, then make 0 for all neg. vals
+specGC = max(0,real(specGC)); 
+timeGC = max(0,real(timeGC));
+
 %% plot results
 
 numVar = size(specGC,2);
@@ -251,10 +284,12 @@ toc
 %% Save relevant GC data
 disp('Saving...')
 
+
 clearvars -except AIC BIC cueString dnobs doHP doNotch DS dur fname freqs fres...
     fs inTargVal maxGC modelOrder numVar outputFileName pointsPerEval specGC ...
     specTime startTime t timeGC timeTime windowSize X channelsToUse supChans...
-    intChans deepChans namesOfTheDay2 lNames theNameIWant2 fname
+    intChans deepChans trialNums origSpecGC origTimeGC specGC_perm timeGC_perm ...
+    nullDistChoice
 
 pretag = '';
 if strcmp(outputFileName(1:3),'Bip')
@@ -262,6 +297,9 @@ if strcmp(outputFileName(1:3),'Bip')
 elseif strcmp(outputFileName(1:3),'ND_')
     pretag = 'ND_';
 end
+
+detInd = strfind(outputFileName,'det_'); % find where det substr is
+pretag = [pretag outputFileName(detInd:detInd+4) '_'];
 
 outputFileName2 = strcat(pretag,fname(1:end-23),...
     '_',cueString,...

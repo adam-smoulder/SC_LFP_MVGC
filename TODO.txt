@@ -24,9 +24,12 @@ From lab meeting:
 			+ So try averaging before then MVGC on ensemble vs. MVGC on each trial then ensemble vs. original method
 			+ cant do individual trials but it holds for quintiles
 		- NOW check the quintile thing... we see that only one of them has a huge bit before the target. What does it mean? check out these trials
-- Removing null distribution!!
+- Removing ERP?
+	+ see the "Estimating Granger causality after stimulus onset: A cautionary note"
 - 25 MO averages? We have the data just do it
-- Nonlinearities??? Nonlinear VAR model estimation
+	+ looks a bit different than 60... hm
+- Need to run mvgc intarg, no detrend!!!
+	+ set up for MO 25, needs run overnight
 - Detrending jazz part 7...
 - Split data into time sections (i.e. delay vs. event) what does the MO do?
 	+ looking pre-target, MO is low...though this also happens if you look post target
@@ -42,8 +45,7 @@ From lab meeting:
 			+ showed very noisy result? odd...though this could just be time MVGC. let's try window 10?
 			+ 
 - Send corentin LFP flips and weird stuff from 072315
-- Try CAR?
-	+ it does something...idk what exactly though...
+- Try scaling individual channels (test data)
 - do GC on 1-3 + 2-4 + 3-5...14-16... or maybe just down to 10-12
 	+ this would reflect poorly for 1-3 on 3-5 for example... test gc between two identical signals?
 		+ two identical signals doesn't work, rank deficient matrices...
@@ -59,11 +61,13 @@ From lab meeting:
 - run more data
 	+ show metrics, 12 datasets run
 - Make CSDs for all data, see if aligned?
-- Try scaling individual channels (test data)
-- Try w/ and w/o detrend stuff
 - ASK BYRON ABOUT AVERAGING INFORMATION METRICS
 - run 2 6 and 10 on original dataset - compare to standard?
 	+ also try other bip sub for channels!
+	+ perhaps try "Bipolar Addition"?
+- Nonlinearities??? Nonlinear VAR model estimation
+- Try CAR?
+	+ it does something...idk what exactly though...
 		
 - investigate ND_bl_sc_112515_targlfp_MO_62_intarg_1
 	+ odd that it shows such GC before the target onset...
@@ -89,7 +93,7 @@ TO TRY?
 	 	Isolate (rawData->rawDataGoodChan) -> Filter (rawDataGoodChan->lfp)
 		-> Align (lfp->sacctargmat) -> Detrend? (sacctargmat->sacctargmat) -> BiP (sacctargmat->bip) 
 		-> Detrend? (bip->bip) -> Downsample (bip->procData) -> Run
-		
+
 
 		
 
@@ -170,7 +174,6 @@ While mega run:
 - Effect of filtering on play data?
 
 
-
 ---- LOW PRIORITY -----
 
 BEFORE mega run:
@@ -188,12 +191,9 @@ BEFORE mega run:
 
 CLEAN UP ALL
 - Perform analysis over more channels (?)
-- Granger Causality Detrending - window size? how do?
 - Bandpass
 	- GC does nonlinear stuff though? we should def check out!
 	- do time domain MVGC! we shouldn't have 300hz bs now
-
-- source control??
 
 - other TFDs?
 	
@@ -213,9 +213,6 @@ FROM MEETING WITH DR. DEVARAJAN 12/14/17:
 - paper: Gamma Oscillations Are Generated Locally in an Attention-Related Midbrain Network
 - local folks doing this stuff: Pascal Fries, Bastos
 - better than multitaper..? -> Matching Pursuit
-
-
-
 
 
 *** Temporally demean time series data |X|, which may be single- or
@@ -253,6 +250,8 @@ FROM MEETING WITH DR. DEVARAJAN 12/14/17:
 	
 
 ---- Recently done ---- 
+- Removing null distribution!!
+	+ setup! Should probs rerun everything...
 
 +++ Found noise lines at 60, 300, 321.8, 14276, 14919.6 
 	+ in GC, there's noise (w/no downsample) at ~4800 and 9600Hz... only in the GC though :/ not sure how to deal? probs just ignore...
