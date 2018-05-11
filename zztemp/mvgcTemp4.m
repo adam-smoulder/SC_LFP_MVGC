@@ -1,4 +1,4 @@
-% load appropriate preprocessed data before running!
+% PROVIDE MODEL ORDER AND CUESTRING BEFORE RUNNING
 
 % pref MO:
 % bb 070915: 62
@@ -14,20 +14,18 @@
 % bl 0723152: 21 (62 is good)
 % bl 031115: 21 (62 is good)
 % bl 112515: 25 (62 is good)
-% bl 083017:
+% bl 083017: 
 
+nullDistChoice = 'trial';
 
 %% GC Prep variables that may change between runs
 
-cueString = 'targlfp';  % cue to use
+% cueString = 'sacclfp';  % cue to use
 inTargVal = 1;          % intarg vs outtarg vs both
 analysisType = 'cond';  % 'cond' = conditional, 'pw' = pairwise
 
-holdoutFraction = 0;  % for holdout/ensemble testingl; 0 for using all data
-nullDistChoice = 'trial';   % trial for trial scramble, time for time scramble
-
-
 % Setup for GC
+
 icregmode = 'OLS';  % information criteria regression mode ('OLS', 'LWR' or empty for default)
 momax     = 70;     % maximum model order for model order estimation
 
@@ -39,9 +37,9 @@ nobs  = dur*fs+1;       % number of observations in a trial
 tnobs = nobs+dnobs;     % total observations per trial for time series generation
 k = 1:tnobs;            % vector of time steps
 
-monkey_data = fname(1:12);          % used for file naming and such
 axisLimit = 0;                      % if 0, axisLimit = maxGC (only used for subtractorExtractor)
-downsampleFactor = 1000/fs;         % HACK fix later
+downsampleFactor = 1000/fs;         % takes 1khz -> 250hz % HACK fix later
+
 
 %% Isolate desired data
 
@@ -54,19 +52,10 @@ switch inTargVal
     otherwise
         dataToUse = data;
 end
-%dataToUse = dataToUse(randperm(length(dataToUse))); % scramble trial order
-
-
-% remove held out data if desired
-if holdoutFraction
-    holdoutLength = ceil(holdoutFraction*length(dataToUse))+1;
-    useLength = length(dataToUse)-holdoutLength;
-    dataToUse = dataToUse(holdoutLength:end); % only take subset
-end
 
 % specifically isolate the cue we want to analyze
 [nChannels, nTime] = size(dataToUse(1).sacclfpmat);
-nTrials = length(dataToUse);
+nTrials = length(dataToUse);  % updated now for in vs. outtarg
 X = nan(nChannels, nTime, nTrials);
 if strcmp(cueString,'targlfp')
     X = reshape([dataToUse.targlfpmat],size(X));
@@ -76,53 +65,43 @@ else
     disp('Something went wrong...Check your cueString')
 end
 
-trialNums = [data.trialNum];
-
 % remove the rest of the stuff from memory, we shouldn't need it!
 clear data;
 clear dataToUse;
 
 
 %% Model order estimation
-X4mo = X;
-% target
-% 200-900 is normal
-% 300-800 is like pre
-% 200-800 is like pre
-% 300-900 is like pre
+% ptic('\n*** tsdata_to_infocrit\n');
+% [AIC,BIC,moAIC,moBIC] = tsdata_to_infocrit(X,momax,icregmode);
+% ptoc('*** tsdata_to_infocrit took ');
+% 
+% % Plot information criteria. 
+% figureCount = figureCount+1;
+% figure(figureCount); clf;
+% order = 1:momax;
+% subplot(1,2,1)
+% hold on
+% plot(order,AIC,'LineWidth',2)
+% plot(order,BIC,'LineWidth',2)
+% title(['Model order estimation']);
+% legend('AIC','BIC')
+% subplot(1,2,2)
+% hold on
+% plot(order(2:end),diff(AIC),'LineWidth',2)
+% plot(order(2:end),diff(BIC),'LineWidth',2)
+% legend('AIC','BIC')
+% title('1st Difference of model order est.');
+% hold off
+% 
+% fprintf('\nbest model order (AIC) = %d\n',moAIC);
+% fprintf('best model order (BIC) = %d\n',moBIC);
 
-ptic('\n*** tsdata_to_infocrit\n');
-[AIC,BIC,moAIC,moBIC] = tsdata_to_infocrit(X4mo,momax,icregmode);
-ptoc('*** tsdata_to_infocrit took ');
-
-% Plot information criteria. 
-figureCount = figureCount+1;
-figure(figureCount); clf;
-order = 1:momax;
-subplot(1,2,1)
-hold on
-plot(order,AIC,'LineWidth',2)
-plot(order,BIC,'LineWidth',2)
-title(['Model order estimation']);
-legend('AIC','BIC')
-subplot(1,2,2)
-hold on
-plot(order(2:end),diff(AIC),'LineWidth',2)
-plot(order(2:end),diff(BIC),'LineWidth',2)
-legend('AIC','BIC')
-title('1st Difference of model order est.');
-hold off
-
-fprintf('\nbest model order (AIC) = %d\n',moAIC);
-fprintf('best model order (BIC) = %d\n',moBIC);
-
-modelOrder = moAIC;
-clear X4mo
 
 %% Setup for MVGC
 % Performs Multivariate Granger Causality using the MVGC toolbox
 % if different model order desired, use following line:
-% modelOrder = 62; 
+
+disp(['Model order is ' num2str(modelOrder)]);
 
 % Parameters that should not change between runs
 regmode   = 'OLS';          % VAR model estimation regression mode ('OLS', 'LWR' or empty for default - 'OLS')
@@ -151,12 +130,13 @@ nBins = fres+1;                                 % found mostly experimentally...
 stepsize = (fs/2)/nBins;                        % max frequency is fs/2 (Nyquist)
 freqs = 0:stepsize:(fs/2)-stepsize;             % frequency values
 badCalcs = zeros(1,enobs);                      % record where calculations fail
-                  
-specGC = zeros(enobs,nvars,nvars,nBins);        % dims:  time, eq1, eq2, freq
-timeGC = zeros(nvars, nvars, enobs);            % dims:  eq1, eq2, time
+
+%%                    
+specGC = nan(enobs,nvars,nvars,nBins);          % dims:  time, eq1, eq2, freq
+timeGC = nan(nvars, nvars, enobs);              % dims:  eq1, eq2, time
 
 %% "Vertical" regression GC calculation
-disp('Beginning GC  calculation')
+disp('Beginning GC calculation')
 disp(['Time MVGC calculated up to ' num2str(fs/10) 'Hz'])
 tic
 
@@ -189,8 +169,9 @@ for e = 1:enobs
     
     % Calculate GC for window
     a  = autocov_to_spwcgc(G,fres); % rate limiting step
+    sizeOfa = size(a,3);
     specGC(e,:,:,1:size(a,3)) = a;
-    timeGC(:,:,e) = squeeze(sum(specGC(e,:,:,1:floor(nBins/5)),4))./(nBins/5); % up to (nyq/5)
+    timeGC(:,:,e) = squeeze(sum(specGC(e,:,:,1:floor(nBins/5)),4))./(nBins/5); % up to ~60Hz (nyq/5)
     if isbad(a,false)
         fprintf(2,' *** skipping - GC calculation failed\n');
         badCalcs(e) = 1;
@@ -211,9 +192,9 @@ toc
 offset = modelOrder + windowSize;
 specTime = t(offset:end);
 
+%% Calculate null distribution and subtract it
 origSpecGC = specGC;
 origTimeGC = timeGC;
-%% Calculate null distribution and subtract it
 
 shuffleCount = 3;
 dispNullDists = 0;
@@ -246,7 +227,7 @@ numVar = size(specGC,2);
 maxGC = greatestMax(specGC(:,:,:,1:fres/2));
 
 %SD Plot
-figure(66)
+figure()
 for i=1:numVar
     for j=1:numVar
         if i~=j
@@ -301,6 +282,7 @@ toc
 %% Save relevant GC data
 disp('Saving...')
 
+
 clearvars -except AIC BIC cueString dnobs doHP doNotch DS dur fname freqs fres...
     fs inTargVal maxGC modelOrder numVar outputFileName pointsPerEval specGC ...
     specTime startTime t timeGC timeTime windowSize X channelsToUse supChans...
@@ -308,17 +290,19 @@ clearvars -except AIC BIC cueString dnobs doHP doNotch DS dur fname freqs fres..
     nullDistChoice
 
 pretag = '';
-
-if strcmp(outputFileName(1:3),'Bip')
-    pretag = [pretag 'Bip_'];
-elseif strcmp(outputFileName(1:3),'ND_')
-    pretag = [pretag 'ND_'];
-end
+% if strcmp(outputFileName(1:3),'Bip')
+%     pretag = [pretag 'Bip_'];
+% elseif strcmp(outputFileName(1:3),'ND_')
+%     pretag = [pretag 'ND_'];
+% end
 
 hpInd = strfind(outputFileName,'HP_'); % find where det substr is
 if strcmp(outputFileName(hpInd+3),'0')
     pretag = [pretag 'HP0_'];
 end
+
+detInd = strfind(outputFileName,'det_'); % find where det substr is
+pretag = [pretag outputFileName(detInd:detInd+4) '_'];
 
 outputFileName2 = strcat(pretag,fname(1:end-23),...
     '_',cueString,...

@@ -1,11 +1,7 @@
 ----------------TODO-------------------
 	
---------
-Current plan - downsample to 1Khz, FwdBack notch @ 60 & 322.5, 8th order HPF @ 1Hz
 
 TODO for real things: 
-
-From lab meeting:
 
 - Held out data? 
 	- 1. Try splitting one dataset into two; do the separate distributions look similar to the total?
@@ -29,7 +25,7 @@ From lab meeting:
 - 25 MO averages? We have the data just do it
 	+ looks a bit different than 60... hm
 - Need to run mvgc intarg, no detrend!!!
-	+ set up for MO 25, needs run overnight
+	+ set up for MO 25, running on AdamPC
 - Detrending jazz part 7...
 - Split data into time sections (i.e. delay vs. event) what does the MO do?
 	+ looking pre-target, MO is low...though this also happens if you look post target
@@ -58,6 +54,7 @@ From lab meeting:
 			+ RUN ON ALL POSSIBLE AND AVERAGE
 			+ perhaps try just the "relevant" channels (1-12)?
 - ASK Corentin about alignment for data
+	+ he's sending it soon
 - run more data
 	+ show metrics, 12 datasets run
 - Make CSDs for all data, see if aligned?
