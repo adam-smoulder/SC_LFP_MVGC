@@ -198,7 +198,7 @@ specTime = t(offset:end);
 origSpecGC = specGC;
 origTimeGC = timeGC;
 
-shuffleCount = 3;
+shuffleCount = 0;
 dispNullDists = 0;
 
 nullDistChoice = ternaryOp(exist('nullDistChoice','var'),nullDistChoice,''); % default it
@@ -237,7 +237,7 @@ for i=1:numVar
             imagesc(specTime,freqs,squeeze(specGC(:,i,j,:))', [0, maxGC]) % why do I need to invert this? imagesc is weird :(
             ylabel('Frequency (Hz)')
             axis xy
-            axis([0 1 0 50])
+            axis([0 1 0 500])
             %axis([-inf, inf, 0, 25])
             colormap jet
             set(gca, 'CLim', [0,maxGC]);

@@ -14,7 +14,7 @@ cueString = 'targlfp';
 mvgcTemp3
 close all
 clear
-
+%%
 load('ND_bb_sc_031315_preproc_det_0_HP_1_Notch_2_1000hz.mat');
 cueString = 'sacclfp';
 mvgcTemp3
