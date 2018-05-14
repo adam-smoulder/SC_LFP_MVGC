@@ -22,7 +22,7 @@ holdoutFraction = 0;  % for holdout/ensemble testing
 
 %% GC Prep variables that may change between runs
 
-cueString = 'sacclfp';  % cue to use
+cueString = 'targlfp';  % cue to use
 inTargVal = 1;          % intarg vs outtarg vs both
 analysisType = 'cond';  % 'cond' = conditional, 'pw' = pairwise
 

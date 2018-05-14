@@ -20,7 +20,8 @@
 % 24bl 071719: none
 
 
-% channelsToUse = [1 3; 4 6; 8 10];              % not "bad channels"
+% typically use [1 3; 5 7; 9 11] if none bad
+
 
 %% PARAMETERS TO EDIT BEFORE RUNNING
 
@@ -28,15 +29,14 @@ fname = 'bb_sc_080415_mcell_spikelfp_cSC.mat';  % dataset file name
 channelsToUse = 1:16;           % not "bad channels"
 detrend = 2;                    % 0 = no detrend, 1 = pre-bip, 2 = post-bip
 fs = 1000;                      % sampling rate of new data (Hz)
-showAlignedSgrams = 1;          % show sgrams of unfiltered data
-showDetrendSgrams = 1;          % show detrended sgrams
-showBipSgrams = 1;              % show post-filtered sgrams
+showAlignedSgrams = 0;          % show sgrams of unfiltered data
+showDetrendSgrams = 0;          % show detrended sgrams
+showBipSgrams = 0;              % show post-filtered sgrams
 doNotch = 1;                    % 1 for do notch, 0 for no.
-doHP = 1;                       % 1 for do hp, 0 for no.
+doHP = 0;                       % 1 for do hp, 0 for no.
 harmonicNotch = 2;              % 0 = no, 1 = 5 harms, 2 = specific vals
 inTargVal = 1;                  % intarg vs. outtarg vs. all data (used for visualization)
-
-%% Load raw data mat
+doCAR = 1;
 
 load(fname);                    % load data file
 data = data([data.goodLFP]==1); % remove bad LFP trials
@@ -72,7 +72,7 @@ totalHPFilterOrder = 6;     % HP filter order (must be even # bc filtfilt)
 highpFreq = 1;              % frequency for high pass filter
 notchFreq = 60;             % base frequency to notch
 notchOrder = 1;             % notch filter order (so 2*this+1 coeffs)
-
+doHP = 0;
 PERFORMLP = 0;              % perform lowpass, used for CSD
 
 disp('Filtering data')
@@ -129,7 +129,6 @@ end
 
 disp(['notched @ ' num2str(notchfreqs*rawFs/2)])
 toc
-
 %% Realign Data
 % Realign new lfp to targ, go, sacc - only these three lfp fields along with
 % 'lfp' itself are updated by the end of this process
@@ -175,6 +174,24 @@ toc
 meanTargLFPPostRealign = mean(reshape([data.targlfpmat],[16, 30001, length(data)]),3);
 meanSaccLFPPostRealign = mean(reshape([data.sacclfpmat],[16, 30001, length(data)]),3);
 
+%% CAR
+% subtract slightly separated channels within same general area to remove
+% reference
+% sacclfpmat
+disp('Performing CAR')
+tic
+
+nTrials = length(data);
+for trial = 1:nTrials    
+    targCAR = repmat(mean(data(trial).targlfpmat),[16 1 1]);
+    data(trial).targlfpmat = data(trial).targlfpmat-targCAR;
+    
+    saccCAR = repmat(mean(data(trial).sacclfpmat),[16 1 1]);
+    data(trial).sacclfpmat = data(trial).sacclfpmat-saccCAR;
+
+end
+
+toc
 
 %% Detrend
 nTrials = length(data);
@@ -219,9 +236,8 @@ end
 meanTargLFPPostDS = mean(reshape([data.targlfpmat],[16, 1001, length(data)]),3);
 meanSaccLFPPostDS = mean(reshape([data.sacclfpmat],[16, 1001, length(data)]),3);
 
-%% 
-% 
-% SAVE data for use in GC
+
+%% SAVE data for use in GC
 disp('Saving data')
 tic
 
@@ -231,48 +247,15 @@ data = rmfield(data,[{'rawData'},{'targspikemat'},{'gospikemat'},...
     {'gazePosition'},{'targCode'},{'measCode'},{'goCode'},...
     {'stateTransitions'},{'srts'},{'delays'},{'spikeTimestamps'},...
     {'rawDataGoodChan'}]);
+outputFileName = strcat('CAR_',fname(1:end-23),'_preproc_det_',...
+    num2str(detrend),'_HP_',num2str(doHP),'_Notch_',num2str(harmonicNotch),...
+    '_',num2str(fs),'hz.mat');
 
-% outputFileName = strcat('',fname(1:end-23),'_filted_det_',...
-%     num2str(detrend),'_HP_',num2str(doHP),'_Notch_',num2str(harmonicNotch),...
-%     '_',num2str(fs),'hz.mat');
-
-outputFileName = strcat('',fname(1:end-23),'_dataForCSD.mat');
-
-
-clearvars -except cueString data detrend doHP doNotch DS figureCount fname ...
+clearvars -except data detrend doHP doNotch DS figureCount fname ...
     fs highpFreq nnotch notchfreqs outputFileName rawFs totalHPFilterOrder ...
-    meanTargLFPPostRealign meanSaccLFPPostRealign 
-
-% % save(outputFileName,'-v7.3')
-% % 
-% % toc
-% % disp('End Data Preparation')
-% 
-% %% SAVE data for use in GC
-% disp('Saving data for CSD')
-% tic
-% 
-% % remove fields we don't need that take up a lot of space
-% % dataToSave = rmfield(data,[{'meanTargLFPPostRealign'},{'meanSaccLFPPostRealign'}...
-% %     {'meanTargLFPPostDetrend'},{'meanSaccLFPPostDetrend'}...
-% %     {'meanTargLFPPostDS'}, {'meanSaccLFPPostDS'}]);
-% outputFileName = strcat('',fname(1:end-23),'_dataForCSD.mat');
-% 
-% clearvars -except meanTargLFPPostRealign meanSaccLFPPostRealign ...
-%     meanTargLFPPostDetrend meanSaccLFPPostDetrend meanTargLFPPostDS ... 
-%     meanSaccLFPPostDS outputFileName
-% 
-% save(outputFileName,'-v7.3')
-% 
-% toc
-% disp('End Data Preparation')
-
-
-% clearvars -except meanTargLFPPostRealign meanSaccLFPPostRealign ...
-%      outputFileName
+    channelsToUse
 
 save(outputFileName,'-v7.3')
 
 toc
 disp('End Data Preparation')
-

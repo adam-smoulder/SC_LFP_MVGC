@@ -1,7 +1,7 @@
 
 % used to make sure channels for neural data show activity
 % load preprocessed data beforehand
-nChannels = 3;
+nChannels = 16;
 nTime = fs+1;
 nrt = 2; % number of random trials to use
 
