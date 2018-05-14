@@ -17,7 +17,7 @@
 % bl 112515: 25 (62 is good)
 % bl 083017: 
 
-nullDistChoice = 'trial';
+nullDistChoice = '';
 
 %% GC Prep variables that may change between runs
 
@@ -198,7 +198,7 @@ specTime = t(offset:end);
 origSpecGC = specGC;
 origTimeGC = timeGC;
 
-shuffleCount = 0;
+shuffleCount = 1;
 dispNullDists = 0;
 
 nullDistChoice = ternaryOp(exist('nullDistChoice','var'),nullDistChoice,''); % default it
@@ -210,6 +210,7 @@ elseif strcmp(nullDistChoice,'time')
     nullDistScript_timeScramble % outputs specGC_perm and timeGC_perm
 else 
     specGC_perm = zeros([shuffleCount size(specGC)]);
+    timeGC_perm = zeros([shuffleCount size(timeGC)]);
 end
 
 % update spec and time GC based on null dist

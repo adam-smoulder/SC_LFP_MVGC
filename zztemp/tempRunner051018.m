@@ -14,14 +14,14 @@ cueString = 'targlfp';
 mvgcTemp3
 close all
 clear
-%%
+%% skip this one...
 load('ND_bb_sc_031315_preproc_det_0_HP_1_Notch_2_1000hz.mat');
 cueString = 'sacclfp';
 mvgcTemp3
 close all
 clear
 
-%
+%%
 load('ND_bb_sc_070915_preproc_det_0_HP_1_Notch_2_1000hz.mat');
 cueString = 'targlfp';
 mvgcTemp3
@@ -86,27 +86,27 @@ mvgcTemp3
 close all
 clear
 
-%
-load('ND_blsc_0723151_preproc_det_0_HP_1_Notch_2_1000hz.mat');
+%%
+load('ND_bl_sc0723151_preproc_det_0_HP_1_Notch_2_1000hz.mat');
 cueString = 'targlfp';
 mvgcTemp3
 close all
 clear
 
-load('ND_blsc_0723151_preproc_det_0_HP_1_Notch_2_1000hz.mat');
+load('ND_bl_sc0723151_preproc_det_0_HP_1_Notch_2_1000hz.mat');
 cueString = 'sacclfp';
 mvgcTemp3
 close all
 clear
 
 %
-load('ND_blsc_0723152_preproc_det_0_HP_1_Notch_2_1000hz.mat');
+load('ND_bl_sc0723152_preproc_det_0_HP_1_Notch_2_1000hz.mat');
 cueString = 'targlfp';
 mvgcTemp3
 close all
 clear
 
-load('ND_blsc_0723152_preproc_det_0_HP_1_Notch_2_1000hz.mat');
+load('ND_bl_sc0723152_preproc_det_0_HP_1_Notch_2_1000hz.mat');
 cueString = 'sacclfp';
 mvgcTemp3
 close all
