@@ -183,7 +183,7 @@ mvgcTemp4
 close all
 clear
 
-%
+%% got to here^ overnight 5/13-5/14
 load('ND_bb_sc_070915_preproc_det_2_HP_0_Notch_2_1000hz.mat');
 cueString = 'targlfp';
 modelOrder = 62;

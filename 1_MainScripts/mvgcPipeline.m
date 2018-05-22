@@ -246,7 +246,7 @@ numVar = size(specGC,2);
 maxGC = greatestMax(specGC(:,:,:,1:fres/2));
 
 %SD Plot
-figure(66)
+figure()
 for i=1:numVar
     for j=1:numVar
         if i~=j
@@ -275,6 +275,8 @@ title(['intarg = ' num2str(inTargVal)])
 xlabel(['Max GC = ' num2str(maxGC) '      points/eval = ' num2str(pointsPerEval)])
 ylabel(['Model order = ' num2str(modelOrder)])
 
+subplot(numVar, numVar, 2)
+title([fname(1:2) fname(7:12)])
 
 % %TD Plot
 % maxTimeGC = greatestMax(timeGC);
