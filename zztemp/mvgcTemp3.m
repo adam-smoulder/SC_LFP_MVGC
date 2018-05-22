@@ -101,7 +101,7 @@ clear dataToUse;
 %% Setup for MVGC
 % Performs Multivariate Granger Causality using the MVGC toolbox
 % if different model order desired, use following line:
-modelOrder = 25;
+modelOrder = 62;
 
 disp(['Model order is ' num2str(modelOrder)]);
 
@@ -142,9 +142,11 @@ disp('Beginning GC calculation')
 disp(['Time MVGC calculated up to ' num2str(fs/10) 'Hz'])
 tic
 
+recover = 1;
+
 % loop through evaluation points (where actual GC calculation is performed)
 % note: evalPoints represents the leading edge of the window
-for e = 1:enobs
+for e = recover:enobs
     j = evalPoints(e);
     fprintf('window %d of %d at time = %d',e,enobs,j);
     

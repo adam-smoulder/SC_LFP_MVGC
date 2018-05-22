@@ -9,19 +9,9 @@ clear
 %% no detrend in targ runs
 % I should be able to loop this but when I did that in the past once it
 % went poorly... so I'll just c&p for a few min.
-load('ND_bb_sc_031315_preproc_det_0_HP_1_Notch_2_1000hz.mat');
-cueString = 'targlfp';
-mvgcTemp3
-close all
-clear
-%% skip this one...
-load('ND_bb_sc_031315_preproc_det_0_HP_1_Notch_2_1000hz.mat');
-cueString = 'sacclfp';
-mvgcTemp3
-close all
-clear
 
-%%
+
+%
 load('ND_bb_sc_070915_preproc_det_0_HP_1_Notch_2_1000hz.mat');
 cueString = 'targlfp';
 mvgcTemp3
@@ -53,7 +43,7 @@ cueString = 'targlfp';
 mvgcTemp3
 close all
 clear
-
+%%
 load('ND_bb_sc_080415_preproc_det_0_HP_1_Notch_2_1000hz.mat');
 cueString = 'sacclfp';
 mvgcTemp3
@@ -73,20 +63,8 @@ mvgcTemp3
 close all
 clear
 
+
 %
-load('ND_bb_sc_121415_preproc_det_0_HP_1_Notch_2_1000hz.mat');
-cueString = 'targlfp';
-mvgcTemp3
-close all
-clear
-
-load('ND_bb_sc_121415_preproc_det_0_HP_1_Notch_2_1000hz.mat');
-cueString = 'sacclfp';
-mvgcTemp3
-close all
-clear
-
-%%
 load('ND_bl_sc0723151_preproc_det_0_HP_1_Notch_2_1000hz.mat');
 cueString = 'targlfp';
 mvgcTemp3
@@ -159,6 +137,31 @@ close all
 clear
 
 load('ND_bl_sc_112515_preproc_det_0_HP_1_Notch_2_1000hz.mat');
+cueString = 'sacclfp';
+mvgcTemp3
+close all
+clear
+
+load('ND_bb_sc_031315_preproc_det_0_HP_1_Notch_2_1000hz.mat');
+cueString = 'targlfp';
+mvgcTemp3
+close all
+clear
+% skip this one...
+load('ND_bb_sc_031315_preproc_det_0_HP_1_Notch_2_1000hz.mat');
+cueString = 'sacclfp';
+mvgcTemp3 
+close all
+clear
+
+%
+load('ND_bb_sc_121415_preproc_det_0_HP_1_Notch_2_1000hz.mat');
+cueString = 'targlfp';
+mvgcTemp3
+close all
+clear
+
+load('ND_bb_sc_121415_preproc_det_0_HP_1_Notch_2_1000hz.mat');
 cueString = 'sacclfp';
 mvgcTemp3
 close all
