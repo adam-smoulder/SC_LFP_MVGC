@@ -17,7 +17,7 @@
 % bl 112515: 25 (62 is good)
 % bl 083017: 
 
-nullDistChoice = 'trial';
+nullDistChoice = '';
 
 %% GC Prep variables that may change between runs
 
@@ -101,7 +101,7 @@ clear dataToUse;
 %% Setup for MVGC
 % Performs Multivariate Granger Causality using the MVGC toolbox
 % if different model order desired, use following line:
-modelOrder = 25;
+modelOrder = 62;
 
 disp(['Model order is ' num2str(modelOrder)]);
 
@@ -142,9 +142,11 @@ disp('Beginning GC calculation')
 disp(['Time MVGC calculated up to ' num2str(fs/10) 'Hz'])
 tic
 
+recover = 1;
+
 % loop through evaluation points (where actual GC calculation is performed)
 % note: evalPoints represents the leading edge of the window
-for e = 1:enobs
+for e = recover:enobs
     j = evalPoints(e);
     fprintf('window %d of %d at time = %d',e,enobs,j);
     
@@ -198,7 +200,7 @@ specTime = t(offset:end);
 origSpecGC = specGC;
 origTimeGC = timeGC;
 
-shuffleCount = 0;
+shuffleCount = 1;
 dispNullDists = 0;
 
 nullDistChoice = ternaryOp(exist('nullDistChoice','var'),nullDistChoice,''); % default it
@@ -210,6 +212,7 @@ elseif strcmp(nullDistChoice,'time')
     nullDistScript_timeScramble % outputs specGC_perm and timeGC_perm
 else 
     specGC_perm = zeros([shuffleCount size(specGC)]);
+    timeGC_perm = zeros([shuffleCount size(timeGC)]);
 end
 
 % update spec and time GC based on null dist
