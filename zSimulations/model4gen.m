@@ -1,10 +1,12 @@
-
+%% Adapted from MVGC toolbox var9 model from demo. Run this script to
+% generate a 3rd order 9 variable VAR model
 
 n = 9; % number of variables
 p = 3; % model order
 
-A = zeros(n,n,p);
+A = zeros(n,n,p); % dimensions: affectee, affector, order
 
+% these are the VAR coefficients, with each "page" being another lag
 A(:,:,1) = [
     0.0114         0    0.4088    0.4236         0         0         0         0         0;
    -0.3394   -0.0192         0    0.2799         0         0         0    0.3085         0;
@@ -54,10 +56,10 @@ xMin = -greatestMax(-X);
 
 if makeSomeNoise == 1
     base = randn(N,ntrials);
-    VarQ = (xMax-xMin)/greatestMax(base);
+    VarQ = noisePower*(xMax-xMin)/(greatestMax(base)+greatestMax(-base));
     baseRepeat = permute(repmat(base,[1 1 nvars]), [3 1 2]);
     Q = VarQ*baseRepeat-mean([xMax xMin])+1; % 0 mean side noise process
-    X = X+Q;
+    trueX = trueX+Q;
 elseif makeSomeNoise == 2
     R = zeros([nobs nvars ntrials]);
     maxptmag = greatestMax(X)+greatestMax(-X)-0.5;

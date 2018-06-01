@@ -1,0 +1,13 @@
+plot(x1)
+hold on
+plot(x2)
+plot(y1)
+plot(y2)
+% plot(a1)
+% plot(a2)
+% plot(b1)
+% plot(b2)
+plot(u1)
+plot(u2)
+plot(v1)
+plot(v2)

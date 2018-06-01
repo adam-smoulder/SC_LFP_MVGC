@@ -1,5 +1,3 @@
-
-
 n = 9; % number of variables
 p = 3; % model order
 

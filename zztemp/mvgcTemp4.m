@@ -27,7 +27,7 @@ analysisType = 'cond';  % 'cond' = conditional, 'pw' = pairwise
 % Setup for GC
 
 icregmode = 'OLS';  % information criteria regression mode ('OLS', 'LWR' or empty for default)
-momax     = 70;     % maximum model order for model order estimation
+momax     = 30;     % maximum model order for model order estimation
 
 % Parameters that should not change between runs
 dnobs     = 0;          % initial observations to discard per trial - 0; we can ignore as needed
@@ -71,36 +71,36 @@ clear dataToUse;
 
 
 %% Model order estimation
-% ptic('\n*** tsdata_to_infocrit\n');
-% [AIC,BIC,moAIC,moBIC] = tsdata_to_infocrit(X,momax,icregmode);
-% ptoc('*** tsdata_to_infocrit took ');
-% 
-% % Plot information criteria. 
-% figureCount = figureCount+1;
-% figure(figureCount); clf;
-% order = 1:momax;
-% subplot(1,2,1)
-% hold on
-% plot(order,AIC,'LineWidth',2)
-% plot(order,BIC,'LineWidth',2)
-% title(['Model order estimation']);
-% legend('AIC','BIC')
-% subplot(1,2,2)
-% hold on
-% plot(order(2:end),diff(AIC),'LineWidth',2)
-% plot(order(2:end),diff(BIC),'LineWidth',2)
-% legend('AIC','BIC')
-% title('1st Difference of model order est.');
-% hold off
-% 
-% fprintf('\nbest model order (AIC) = %d\n',moAIC);
-% fprintf('best model order (BIC) = %d\n',moBIC);
+ptic('\n*** tsdata_to_infocrit\n');
+[AIC,BIC,moAIC,moBIC] = tsdata_to_infocrit(X,momax,icregmode);
+ptoc('*** tsdata_to_infocrit took ');
+
+% Plot information criteria. 
+figureCount = figureCount+1;
+figure(figureCount); clf;
+order = 1:momax;
+subplot(1,2,1)
+hold on
+plot(order,AIC,'LineWidth',2)
+plot(order,BIC,'LineWidth',2)
+title(['Model order estimation']);
+legend('AIC','BIC')
+subplot(1,2,2)
+hold on
+plot(order(2:end),diff(AIC),'LineWidth',2)
+plot(order(2:end),diff(BIC),'LineWidth',2)
+legend('AIC','BIC')
+title('1st Difference of model order est.');
+hold off
+
+fprintf('\nbest model order (AIC) = %d\n',moAIC);
+fprintf('best model order (BIC) = %d\n',moBIC);
 
 
 %% Setup for MVGC
 % Performs Multivariate Granger Causality using the MVGC toolbox
 % if different model order desired, use following line:
-
+modelOrder = 25;
 disp(['Model order is ' num2str(modelOrder)]);
 
 % Parameters that should not change between runs
@@ -192,11 +192,13 @@ toc
 offset = modelOrder + windowSize;
 specTime = t(offset:end);
 
-%% Calculate null distribution and subtract it
-origSpecGC = specGC;
-origTimeGC = timeGC;
+% negative and imaginary values are uninterpretable, so:
+% find real part, then make 0 for all neg. vals
+specGC = max(0,real(specGC)); 
+timeGC = max(0,real(timeGC));
 
-shuffleCount = 3;
+%% Calculate null distribution
+shuffleCount = 10;
 dispNullDists = 0;
 
 nullDistChoice = ternaryOp(exist('nullDistChoice','var'),nullDistChoice,''); % default it
@@ -213,13 +215,8 @@ end
 % update spec and time GC based on null dist
 nullDistSpecGC = squeeze(mean(specGC_perm,1));
 nullDistTimeGC = squeeze(mean(timeGC_perm,1));
-specGC = origSpecGC - nullDistSpecGC;
-timeGC = origTimeGC - nullDistTimeGC;
 
-% negative and imaginary values are uninterpretable, so:
-% find real part, then make 0 for all neg. vals
-specGC = max(0,real(specGC)); 
-timeGC = max(0,real(timeGC));
+
 
 %% plot results
 
@@ -287,9 +284,9 @@ clearvars -except AIC BIC cueString dnobs doHP doNotch DS dur fname freqs fres..
     fs inTargVal maxGC modelOrder numVar outputFileName pointsPerEval specGC ...
     specTime startTime t timeGC timeTime windowSize X channelsToUse supChans...
     intChans deepChans trialNums origSpecGC origTimeGC specGC_perm timeGC_perm ...
-    nullDistChoice
+    nullDistChoice nullDistSpecGC topChans midChans deepChans refChans
 
-pretag = '';
+pretag = 'CARGC_';
 % if strcmp(outputFileName(1:3),'Bip')
 %     pretag = [pretag 'Bip_'];
 % elseif strcmp(outputFileName(1:3),'ND_')

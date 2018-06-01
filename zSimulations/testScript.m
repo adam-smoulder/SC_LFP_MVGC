@@ -18,26 +18,27 @@
 % installation directory for licensing terms.
 %
 %% Parameters
+tic
 clear
 useBip = 0;  %1 = bip sub, 2 = bip add
 detrendIt = 2; % 1 = car before detrend, 2 = car after detrend
-makeSomeNoise = 2; % 1 = WGN (Q), 2 = linear non-zero mean 2-step (R)
-doICA = 1;
+makeSomeNoise = 1; % 1 = WGN (Q), 2 = linear non-zero mean 2-step (R)
+doICA = 0;
 icaVarThresh = 0.1; % maximum variance for reference signal from ICA
-noisePower = 0.5; % "SNR"
-modelToUse = 5;
+noisePower = 1; % "SNR"
+modelToUse = 6;
 shuffleCount = 3;
 
 dnobs     = 0;       % initial observations to discard per trial - 0
 regmode   = 'OLS';   % VAR model estimation regression mode ('OLS', 'LWR' or empty for default - 'OLS' ?
-nlags     = 5;       % number of lags in VAR model
-ntrials   = 200;    % number of trials - 1000
-dur       = 2;     % duration of trial (s) - 4.5
-fs        = 200;     % sampling frequency (Hz) - 200
-fres      = 2000;     % frequency resolution - 300?
-nvars     = 4;       % number of channels data that's being compared - 2
+nlags     = 50;       % number of lags in VAR model
+ntrials   = 100;    % number of trials - 1000
+dur       = 0.114;     % duration of trial (s) - 4.5
+fs        = 1000;     % sampling frequency (Hz) - 200
+fres      = 4000;     % frequency resolution - 300?
+nvars     = 12;       % number of channels data that's being compared - 2
 pointsPerEval = 20;  % evaluate GC at every ev-th sample - 5
-windowSize= 40;     % observation regression window size - 75
+windowSize= 100;     % observation regression window size - 75
 %modelOrder= 2;       % model order (for real-world data should be estimated) - 2
 seed      = 0;       % random seed (0 for unseeded) - 0
 
@@ -63,14 +64,14 @@ if doICA
     varDims = cell([1, ntrials]);
     removedRef = zeros(size(X));
     for i = 1:ntrials
-        [ICs, A, W] = fastica(squeeze(X(:,:,i))); % perform ICA
-        [varA, minVarDim] = min(var(A));   % find dimension with smallest variance
+        [ICs, AT, W] = fastica(squeeze(X(:,:,i))); % perform ICA
+        [varA, minVarDim] = min(var(AT));   % find dimension with smallest variance
         if varA < icaVarThresh % if under thresh, remove suspected ref.
-            removedRef(:,:,i) = A(:,minVarDim)*ICs(minVarDim,:);
+            removedRef(:,:,i) = AT(:,minVarDim)*ICs(minVarDim,:);
         end
         disp(['Trial ' num2str(i) ' of ' num2str(ntrials) ' complete'])
+        varDims(i) = {var(AT)};
     end
-    varDims(i) = {varA};
     X = X-removedRef;
 end
 
@@ -113,7 +114,7 @@ end
 %% Estimation of model order
 moEstX = X;
 
-momax = 10; % max model order for estimation
+momax = 20; % max model order for estimation
 icregmode = 'OLS';
 
 ptic('\n*** tsdata_to_infocrit\n');
@@ -151,6 +152,7 @@ modelOrder = moAIC;
 
 
 %% "Vertical" regression GC calculation
+modelOrder = 14;
 nvars = size(X,1);
 
 wnobs = modelOrder+windowSize;                            % number of observations in "vertical slice"
@@ -169,13 +171,13 @@ for e = 1:enobs
     j = evalPoints(e);
     fprintf('window %d of %d at time = %d',e,enobs,j);
 
-    [A,SIG] = tsdata_to_var(X(:,j-wnobs+1:j,:),modelOrder,regmode);
-    if isbad(A)
+    [AT,SIG] = tsdata_to_var(X(:,j-wnobs+1:j,:),modelOrder,regmode);
+    if isbad(AT)
         fprintf(2,' *** skipping - VAR estimation failed\n');
         continue
     end
 
-    [G,info] = var_to_autocov(A,SIG);
+    [G,info] = var_to_autocov(AT,SIG);
     if info.error
         fprintf(2,' *** skipping - bad VAR (%s)\n',info.errmsg);
         continue
@@ -211,6 +213,7 @@ for e = 1:enobs
     
     fprintf('\n');
 end
+toc
 
 specGC = f1;
 timeGC = reshape(squeeze(sum(f1,4)),[size(f1,2),size(f1,3),size(f1,1)]);
@@ -227,90 +230,102 @@ nullDistGC = squeeze(mean(specGC_perm))+2*squeeze(std(specGC_perm,0,1));
 specGC = max(0,real(specGC));
 
 
-%% plot GCs
+% plot GCs
+% 
+% numVar = size(specGC,2);
+% maxGC = greatestMax(specGC(:,:,:,1:fres/2));
+% 
+% %SD Plot
+% figure()
+% for i=1:numVar
+%     for j=1:numVar
+%         if i~=j
+%             subplot(numVar,numVar,(i-1)*numVar+j);
+%             imagesc(specTime,freqs,squeeze(specGC(:,i,j,:))', [0, maxGC]) % why do I need to invert this? imagesc is weird :(
+%             ylabel('Frequency (Hz)')
+%             axis xy
+%             axis([-inf inf 0 100])
+%             %axis([-inf, inf, 0, 25])
+%             colormap jet
+%             set(gca, 'CLim', [0,maxGC]);       
+%         end
+%     end
+% end
+% 
+% % for reference in figure
+% subplot(numVar,numVar,1)
+% title('ActualDist')
+% subplot(numVar, numVar, numVar^2)
+% set(gca, 'CLim', [0,maxGC]);
+% c = colorbar;
+% c.Label.String = 'GC';
+% colorbar
+% xlabel(['Max GC = ' num2str(maxGC) '      points/eval = ' num2str(pointsPerEval)])
+% ylabel(['Model order = ' num2str(modelOrder)])
+% 
+% 
+% nullDistMax = greatestMax(nullDistGC(:,:,:,1:fres/2));
+% 
+% %SD Plot
+% figure()
+% for i=1:numVar
+%     for j=1:numVar
+%         if i~=j
+%             subplot(numVar,numVar,(i-1)*numVar+j);
+%             imagesc(specTime,freqs,squeeze(nullDistGC(:,i,j,:))', [0, maxGC]) % why do I need to invert this? imagesc is weird :(
+%             ylabel('Frequency (Hz)')
+%             axis xy
+%             axis([-inf inf 0 100])
+%             %axis([-inf, inf, 0, 25])
+%             colormap jet
+%             set(gca, 'CLim', [0,maxGC]);       
+%         end
+%     end
+% end
+% 
+% % for reference in figure
+% subplot(numVar,numVar,1)
+% title('NullDist')
+% subplot(numVar, numVar, numVar^2)
+% set(gca, 'CLim', [0,maxGC]);
+% c = colorbar;
+% c.Label.String = 'GC';
+% colorbar
+% xlabel(['Max nullDistGC = ' num2str(nullDistMax) '      points/eval = ' num2str(pointsPerEval)])
+% ylabel(['Model order = ' num2str(modelOrder)])
 
-numVar = size(specGC,2);
-maxGC = greatestMax(specGC(:,:,:,1:fres/2));
 
-%SD Plot
-figure()
-for i=1:numVar
-    for j=1:numVar
-        if i~=j
-            subplot(numVar,numVar,(i-1)*numVar+j);
-            imagesc(specTime,freqs,squeeze(specGC(:,i,j,:))', [0, maxGC]) % why do I need to invert this? imagesc is weird :(
-            ylabel('Frequency (Hz)')
-            axis xy
-            axis([-inf inf 0 100])
-            %axis([-inf, inf, 0, 25])
-            colormap jet
-            set(gca, 'CLim', [0,maxGC]);       
-        end
-    end
+%% frequency plot 
+
+specGCShrunk = squeeze(sum(specGC,1));
+if length(size(nullDistGC)) > 3
+    nullDistShrunk = squeeze(sum(nullDistGC,1));
+else
+    nullDistShrunk = nullDistGC;
 end
 
-% for reference in figure
-subplot(numVar,numVar,1)
-title('ActualDist')
-subplot(numVar, numVar, numVar^2)
-set(gca, 'CLim', [0,maxGC]);
-c = colorbar;
-c.Label.String = 'GC';
-colorbar
-xlabel(['Max GC = ' num2str(maxGC) '      points/eval = ' num2str(pointsPerEval)])
-ylabel(['Model order = ' num2str(modelOrder)])
-
-
-nullDistMax = greatestMax(nullDistGC(:,:,:,1:fres/2));
-
-%SD Plot
-figure()
-for i=1:numVar
-    for j=1:numVar
-        if i~=j
-            subplot(numVar,numVar,(i-1)*numVar+j);
-            imagesc(specTime,freqs,squeeze(nullDistGC(:,i,j,:))', [0, maxGC]) % why do I need to invert this? imagesc is weird :(
-            ylabel('Frequency (Hz)')
-            axis xy
-            axis([-inf inf 0 100])
-            %axis([-inf, inf, 0, 25])
-            colormap jet
-            set(gca, 'CLim', [0,maxGC]);       
-        end
-    end
-end
-
-% for reference in figure
-subplot(numVar,numVar,1)
-title('NullDist')
-subplot(numVar, numVar, numVar^2)
-set(gca, 'CLim', [0,maxGC]);
-c = colorbar;
-c.Label.String = 'GC';
-colorbar
-xlabel(['Max nullDistGC = ' num2str(nullDistMax) '      points/eval = ' num2str(pointsPerEval)])
-ylabel(['Model order = ' num2str(modelOrder)])
-
 numVar = size(specGC,2);
-maxGC = greatestMax(sum(specGC,1)/100);
+maxGC = greatestMax(specGCShrunk);
 
-%SD Plot
+rows = 1:numVar;
+cols = 1:numVar;
+
 figure()
-for i=1:numVar
-    for j=1:numVar
-        if i~=j
+for i=1:length(rows)
+    for j=1:length(cols)
+        if rows(i)~=cols(j)
             subplot(numVar,numVar,(i-1)*numVar+j);
-            plot(freqs,squeeze(sum(specGC(:,i,j,:)/100,1)))
+            plot(freqs,squeeze(specGCShrunk(rows(i),cols(j),:)))
             hold on
-            plot(freqs,squeeze(sum(nullDistGC(:,i,j,:)/100,1)),'LineWidth',2)
-            ylabel('GC Power')
-            xlabel('Frequency')
-            axis([0 50 0 maxGC])
-            colormap jet
-            set(gca, 'CLim', [0,maxGC]);       
+            plot(freqs,squeeze(nullDistShrunk(rows(i),cols(j),:)),'LineWidth',2)
+            axis([0 100 0 maxGC])
         end
     end
 end
+subplot(numVar,numVar,1)
+title(['row: ' num2str(min(rows)) '-' num2str(max(rows)) ' col: ' num2str(min(cols)) '-' num2str(max(cols))])
+ylabel('GC Power')
+xlabel('Frequency')
 
 % for reference in figure
 subplot(numVar,numVar,2)
@@ -318,6 +333,27 @@ legend('Actual','Null')
 subplot(numVar, numVar, numVar^2)
 xlabel(['Max GC = ' num2str(maxGC) '      points/eval = ' num2str(pointsPerEval)])
 ylabel(['Model order = ' num2str(modelOrder)])
+
+
+% establish the significance image and plot it
+crunchedGC = squeeze(sum(specGCShrunk,3))/500;
+crunchedNull = squeeze(sum(nullDistShrunk,3))/500;
+sigImage = (crunchedGC > crunchedNull);
+
+figure
+subplot(1,3,1)
+imagesc(crunchedGC)
+title('GC')
+set(gca, 'CLim', [0,greatestMax(crunchedGC)]);   
+colorbar
+subplot(1,3,2)
+imagesc(crunchedNull)
+title('Null Dist')
+set(gca, 'CLim', [0,greatestMax(crunchedGC)]);   
+colorbar
+subplot(1,3,3)
+imagesc(sigImage)
+title('GCs above null dist')
 
 
 %%
