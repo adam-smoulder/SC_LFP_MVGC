@@ -242,7 +242,7 @@ for i = 1:nTrials
     saccCSD(:,:,i) = resample(trialSaccCSD',1,DS)';
 end
 
-%% Detrending
+% Detrending
 % split up in and out targ data
 if detrend == 2
     intargTrials = ([data.inTarg] == 1);
