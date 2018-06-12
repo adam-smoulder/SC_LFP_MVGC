@@ -18,11 +18,11 @@ icaVarThresh = inf;  % maximum variance between weights for the selected IC
 xMax = squeeze(max(max(max((X)))));
 xMin = squeeze(min(min(min((X)))));
 
-if addNoise == 1    % zero-mean WGN
-    unscaledRef = randn(nobs,ntrials);
-    p2pMag = xMax-xMin;
-    scaledRef = p2pMag*unscaledRef/greatestMax(unscaledRef);
-    R = permute(repmat(scaledRef,[1 1 nvars]), [3 1 2]);
+if addNoise == 1    % zero mean WGN
+    unscaledRef = randn(nobs,ntrials);                   % zero-mean WGN, std of 1
+    signalStd = std(reshape(X,[1 numel(X)]));            % stdev of signal's distribution
+    scaledRef = signalStd*unscaledRef;                   % so SNR is 1
+    R = permute(repmat(scaledRef,[1 1 nvars]), [3 1 2]); % reshape and copy over channels
 elseif addNoise == 2 % non-zero mean 2-step linear reference
     R = zeros([nobs nvars ntrials]);
     maxptmag = xMax-xMin-0.5;

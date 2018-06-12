@@ -31,6 +31,7 @@ for i = 1:numVar
             subplot(numVar,numVar,(i-1)*numVar+j)
             plot(freqs,squeeze(localSpecGCMag(i,j,:)),'LineWidth',3)
             axis([0, maxFreqToPlot, 0, 1.2*maxMagVal])
+            
             set(gca,'fontsize',14)
         end
     end

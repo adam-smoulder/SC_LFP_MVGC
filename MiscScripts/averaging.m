@@ -39,10 +39,30 @@ thenamesForHere = [...
 %     'bl_sc_031115_sacclfp_MO_62_intarg_1.mat';
 %     'bl_sc_112515_sacclfp_MO_62_intarg_1.mat';
 %     'bl_sc_083017_sacclfp_MO_62_intarg_1.mat';
-      'FullBip_bb_sc_080415_targlfp_MO_25_intarg_1.mat';
-      'FullBip_bb_sc_082917_targlfp_MO_25_intarg_1.mat';
-      'FullBip_bl_sc0723151_targlfp_MO_25_intarg_1.mat';
-      'FullBip_bl_sc0723152_targlfp_MO_25_intarg_1.mat';
+      'CARGC_det_2_bb_sc_031315_targlfp_MO_25_intarg_1.mat';
+      'CARGC_det_2_bb_sc_070915_targlfp_MO_25_intarg_1.mat';
+      'CARGC_det_2_bb_sc_071215_targlfp_MO_25_intarg_1.mat';
+      'CARGC_det_2_bb_sc_080415_targlfp_MO_25_intarg_1.mat';
+      'CARGC_det_2_bb_sc_082917_targlfp_MO_25_intarg_1.mat';
+      'CARGC_det_2_bb_sc_121415_targlfp_MO_25_intarg_1.mat';
+      'CARGC_det_2_bl_sc0723151_targlfp_MO_25_intarg_1.mat';
+      'CARGC_det_2_bl_sc0723152_targlfp_MO_25_intarg_1.mat';
+      'CARGC_det_2_bl_sc_031115_targlfp_MO_25_intarg_1.mat';
+      'CARGC_det_2_bl_sc_071415_targlfp_MO_25_intarg_1.mat';
+      'CARGC_det_2_bl_sc_083017_targlfp_MO_25_intarg_1.mat';
+      'CARGC_det_2_bl_sc_112515_targlfp_MO_25_intarg_1.mat';
+%       'CARGC_det_2_bb_sc_031315_sacclfp_MO_25_intarg_1.mat';
+%       'CARGC_det_2_bb_sc_070915_sacclfp_MO_25_intarg_1.mat';
+%       'CARGC_det_2_bb_sc_071215_sacclfp_MO_25_intarg_1.mat';
+%       'CARGC_det_2_bb_sc_080415_sacclfp_MO_25_intarg_1.mat';
+%       'CARGC_det_2_bb_sc_082917_sacclfp_MO_25_intarg_1.mat';
+%       'CARGC_det_2_bb_sc_121415_sacclfp_MO_25_intarg_1.mat';
+%       'CARGC_det_2_bl_sc0723151_sacclfp_MO_25_intarg_1.mat';
+%       'CARGC_det_2_bl_sc0723152_sacclfp_MO_25_intarg_1.mat';
+%       'CARGC_det_2_bl_sc_031115_sacclfp_MO_25_intarg_1.mat';
+%       'CARGC_det_2_bl_sc_071415_sacclfp_MO_25_intarg_1.mat';
+%       'CARGC_det_2_bl_sc_083017_sacclfp_MO_25_intarg_1.mat';
+%       'CARGC_det_2_bl_sc_112515_sacclfp_MO_25_intarg_1.mat';
 %     'HP0_det_2_bb_sc_031315_targlfp_MO_25_intarg_1.mat'; % some acausal target?
 %     'HP0_det_2_bb_sc_070915_targlfp_MO_25_intarg_1.mat';
 %     'HP0_det_2_bb_sc_071215_targlfp_MO_25_intarg_1.mat';
@@ -127,9 +147,9 @@ end
 
 
 avgSpecGC = squeeze(mean(gcMatrix));
-expAvgSpecGC = squeeze(mean(exp(gcMatrix),1));
+%expAvgSpecGC = squeeze(mean(exp(gcMatrix),1));
 sterrorSpecGC = squeeze(std(gcMatrix,1))/sqrt(size(specGCVals,1));
-expStdSpecGC = squeeze(std(exp(gcMatrix),1));
+%expStdSpecGC = squeeze(std(exp(gcMatrix),1));
 medianSpecGC = squeeze(median(gcMatrix));
 
 specGC = avgSpecGC;
@@ -139,7 +159,7 @@ numVar = size(avgSpecGC,2);
 maxGC = greatestMax(avgSpecGC(:,:,:,1:fres/2));
 
 %mean Plot
-figure(1)
+figure()
 for counter=1:numVar
     for j=1:numVar
         if counter~=j
@@ -147,7 +167,7 @@ for counter=1:numVar
             imagesc(specTime,freqs,squeeze(avgSpecGC(:,counter,j,:))', [0, maxGC]) % why do I need to invert this? imagesc is weird :(
             ylabel('Frequency (Hz)')
             axis xy
-            axis([0 1 0 50])
+            axis([0 1 0 100])
             %axis([-inf, inf, 0, 25])
             colormap jet
             set(gca, 'CLim', [0,maxGC]);
@@ -159,6 +179,8 @@ for counter=1:numVar
 end
 
 % for reference in figure
+subplot(numVar, numVar, 1)
+title(['Mean of ' num2str(size(thenamesForHere,1))])
 subplot(numVar, numVar, numVar^2)
 set(gca, 'CLim', [0,maxGC]);
 c = colorbar;
@@ -175,7 +197,7 @@ numVar = size(sterrorSpecGC,2);
 maxGC = greatestMax(sterrorSpecGC(:,:,:,1:fres/2));
 
 %SD Plot
-figure(2)
+figure()
 for counter=1:numVar
     for j=1:numVar
         if counter~=j
@@ -183,7 +205,7 @@ for counter=1:numVar
             imagesc(specTime,freqs,squeeze(sterrorSpecGC(:,counter,j,:))', [0, maxGC]) % why do I need to invert this? imagesc is weird :(
             ylabel('Frequency (Hz)')
             axis xy
-            axis([0 1 0 50])
+            axis([0 1 0 100])
             %axis([-inf, inf, 0, 25])
             colormap jet
             set(gca, 'CLim', [0,maxGC]);
@@ -195,6 +217,8 @@ for counter=1:numVar
 end
 
 % for reference in figure
+subplot(numVar, numVar, 1)
+title(['stderr of ' num2str(size(thenamesForHere,1))])
 subplot(numVar, numVar, numVar^2)
 set(gca, 'CLim', [0,maxGC]);
 c = colorbar;
@@ -287,7 +311,7 @@ numVar = size(medianSpecGC,2);
 maxGC = greatestMax(medianSpecGC(:,:,:,1:fres/2));
 
 %median Plot
-figure(5)
+figure()
 for counter=1:numVar
     for j=1:numVar
         if counter~=j

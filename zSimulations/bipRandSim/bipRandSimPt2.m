@@ -1,34 +1,75 @@
-clear
-load('beforeTest.mat')
+clearvars -except specGC_groundTruth specGC_noPollCAR specGC_randBipMean specGC_CAR specGC_bip shit newOrder trueGC
+
+fileToUse = 'beforeTestClose.mat';
+load(fileToUse)
 % 
 % if makeSomeNoise == 1
 %     base = randn(nobs,ntrials);
 %     VarQ = noisePower*(xMax-xMin)/(greatestMax(base)+greatestMax(-base));
 %     baseRepeat = permute(repmat(base,[1 1 nvars]), [3 1 2]);
-%     Q = VarQ*baseRepeat-mean([xMax xMin])+1; % 0 mean side noise process
+%     Q = VarQ*baseRepeat-mean([xMax xMin])+1; % 0 mean (?) white noise process
 %     trueX = trueX+Q;
 % end
-trueX = trueX_Q10;
+trueX = trueX_NN;
+modelOrder = 3; % or 13 for ding model maybe?
+nobs = size(trueX,2);
+ntrials = size(trueX,3);
+fres = 4000;
+fs = 200;
+regmode = 'OLS';
+windowSize = nobs-modelOrder;
+pointsPerEval = windowSize;
+
+dnobs     = 0;       % initial observations to discard per trial - 0
+regmode   = 'OLS';   % VAR model estimation regression mode ('OLS', 'LWR' or empty for default - 'OLS' ?
+nlags     = 50;       % number of lags in VAR model
+
+dur = nobs/fs;
+tnobs = nobs+dnobs;                 % total observations per trial for time series generation
+k = 1:tnobs;                        % vector of time steps
+t = (k-dnobs-1)/fs;                 % vector of times
 %% RANDOM BIP STUFF SETUP HERE
 %makeSomeNoise = 1;
 %noisePower = 10;
 %theSetup = eye(9);
-CAR = 1;
+
+CAR = 0; % 0 = no CAR, 1 = normal CAR, 2 = no-pollution CAR
 bipRand = 0; % 0 = no bip, 1 = biprand, 2 = bip normal
-randStyle = 3; % 1 = diffSet, 2 = diffTrial, 3 = diffTime
-fullOrNot = 'oddball';
+
+noPoll = 1; % no pollution in biprand 4
+randStyle = 1; % 1 = diffSet, 2 = diffTrial, 3 = diffTime, 4 = diffChan
+indMod = 0; % mod for diffChan
+randPick = ''; % 'normal' for normally distributed about mean (randbip)
+fullOrNot = 'full'; % for rand bip
 shuffleCount = 5;
-numruns = 2;
+numruns = 100;
 % modelOrder = 3;
 
-if CAR
-    tempX = [trueX(:,:,:); trueX(7:9,:,:);];
+useSets = 0; % to ignore subtraction of specific sets for CAR
+sets = [1 2; 1 2; 3 4; 3 4; 5 6; 5 6; 7 8; 7 8; 8 9;];
+
+if CAR==1 % normal
+    tempX = [trueX(:,:,:)];
     trueX = trueX-repmat(mean(tempX),[9,1,1]);
+elseif CAR==2 % no-pollution
+    coeffOrder = 1:9;%randperm(size(trueX,1));%
+    carVal = zeros(size(trueX)); % the effective reference to subtract
+    for i = 1:size(trueX,1)
+        if useSets
+            coeffs = 1/(size(trueX,1)-2)*ones(size(trueX,1),1);
+            coeffs(squeeze(sets(i,:))) = 0;
+        else
+            coeffs = 1/(size(trueX,1)-1)*ones(size(trueX,1),1);
+            coeffs(coeffOrder(i)) = 0;
+        end
+        carVal(i,:,:) = squeeze(sum(trueX.*coeffs));
+    end
+    trueX = trueX-carVal;
 end
 % CAR does best; both upweight and downweight make it worse
 % Increasing upweight removes existing GC
 % increasing downweight introduces more spurious GC
-
+% Nonpolluted shows...exactly the same? is that expected?
 
 if bipRand == 1 % bip rand
     CVs = [];
@@ -51,11 +92,17 @@ if bipRand == 1 % bip rand
         midChans = 3:4;
         deepChans = 5:6;
         
-        
+        nref = length(refChans);
         
         % make reference for removal using random weights (same over trials)
         if randStyle == 1 % diff datasets
-            randoCoeffs = rand(length(refChans),1);
+            nref = length(refChans);
+            if strcmp(randPick,'normal')
+                randoCoeffs = (1/nref)+(1/nref)/4*randn(length(refChans),1);
+                %randoCoeffs = randoCoeffs.*[1;1;1;1;1;1;2;2;2];
+            else
+                randoCoeffs = rand(length(refChans),1);
+            end
             % randoCoeffs = (theSetup(datCount,:))'; % fake; use for trying stuff
             coeffVec = randoCoeffs/sum(randoCoeffs);
             CVs = [CVs; coeffVec'];
@@ -69,8 +116,12 @@ if bipRand == 1 % bip rand
                 ref = squeeze(sum(multMat.*squeeze(trueX(refChans,:,i)))); %ONLY FOR FROZEN CVs over trial
             elseif randStyle == 2 % diff trials
 %             % make reference for removal using random weights, diff trials
-                randoCoeffs = rand(length(refChans),1);
-                %randoCoeffs = (theSetup(datCount,:))'; % fake; use for trying stuff
+                    nref = length(refChans);
+                    if strcmp(randPick,'normal')
+                        randoCoeffs = (1/nref)+(1/nref)/4*randn(length(refChans),1);
+                    else
+                        randoCoeffs = rand(length(refChans),1);
+                    end                %randoCoeffs = (theSetup(datCount,:))'; % fake; use for trying stuff
                 coeffVec = randoCoeffs/sum(randoCoeffs);
                 %CVs = [CVs; coeffVec'];
                 multMat = repmat(coeffVec,[1 nobs]);
@@ -78,24 +129,60 @@ if bipRand == 1 % bip rand
             elseif randStyle == 3 % diff time
                 CVforTime = [];
                 for j = 1:nobs
-                    randoCoeffs = rand(length(refChans),1);
+                    nref = length(refChans);
+                    if strcmp(randPick,'normal')
+                        randoCoeffs = (1/nref)+(1/nref)/4*randn(length(refChans),1);
+                    else
+                        randoCoeffs = rand(length(refChans),1);
+                    end
                     coeffVec = randoCoeffs/sum(randoCoeffs);
                     %CVs = [CVs; coeffVec'];
                     CVforTime = [CVforTime coeffVec];
                 end
                 multMat = CVforTime;
                 ref = squeeze(sum(multMat.*trueX(refChans,:,i)));
+            elseif randStyle == 4 % time and channel
+                ref = zeros(nref,nobs);
+                for j = 1:nobs
+                    if strcmp(randPick,'normal')
+                        randoCoeffs = (1/nref)+(1/nref)/4*randn(nref, nref);
+                    else
+                        randoCoeffs = rand(nref,nref);
+                    end
+                    if noPoll
+                        randoCoeffs = (1-eye(nref)).*randoCoeffs;
+                    end
+                    coeffMat = randoCoeffs./sum(randoCoeffs);
+                    %CVs = [CVs; coeffVec'];
+                    %CVforTime = [CVforTime coeffMat];
+                    
+                    for k = 1:nref
+                        if indMod
+                            randChanToSub = randi(nref);
+                            while randChanToSub == k
+                                randChanToSub = randi(nref);
+                            end
+                            ref(k,j) = trueX(refChans(randChanToSub),j,i);
+                        else
+                            ref(k,j) = squeeze(sum(coeffMat(:,k).*trueX(refChans,j,i)));
+                        end
+                    end
+                end
+                
+                % subtract the reference and reassign
+                topTarg = squeeze(mean(trueX(topChans,:,i)-ref(topChans,:)));
+                midTarg = squeeze(mean(trueX(midChans,:,i)-ref(midChans,:)));
+                deepTarg = squeeze(mean(trueX(deepChans,:,i)-ref(deepChans,:)));
+                X(:,:,i) = [topTarg; midTarg; deepTarg];
             end
-
-
             
-         
-            
-            % subtract the reference and reassign
-            topTarg = squeeze(mean(trueX(topChans,:,i)))-ref;
-            midTarg = squeeze(mean(trueX(midChans,:,i)))-ref;
-            deepTarg = squeeze(mean(trueX(deepChans,:,i)))-ref;
-            X(:,:,i) = [topTarg; midTarg; deepTarg];
+            if randStyle ~= 4 % method 4 is hackish atm...
+                % subtract the reference and reassign
+                topTarg = squeeze(mean(trueX(topChans,:,i)))-ref;
+                midTarg = squeeze(mean(trueX(midChans,:,i)))-ref;
+                deepTarg = squeeze(mean(trueX(deepChans,:,i)))-ref;
+                X(:,:,i) = [topTarg; midTarg; deepTarg];
+            end
         end
                 
         % DONT FORGET TO DETREND
@@ -275,55 +362,62 @@ if size(specGCShrunk,3)~=length(freqs)
 end
 
 numVar = size(specGC,2);
-maxGC = greatestMax(specGCShrunk);
+maxGC = greatestMax(trueGC);
 
 rows = 1:numVar;
 cols = 1:numVar;
+
+errors = sum(abs(trueGC-squeeze(specGC)),3);
+spurError = sum(errors([3 7 8]));
+lostError = sum(errors([2 4 6]));
 
 figure()
 for i=1:length(rows)
     for j=1:length(cols)
         if rows(i)~=cols(j)
             subplot(numVar,numVar,(i-1)*numVar+j);
-            plot(freqs,squeeze(specGCShrunk(rows(i),cols(j),:)))
+            plot(freqs,squeeze(specGCShrunk(rows(i),cols(j),:)),'Linewidth',2)
             hold on
             plot(freqs,squeeze(nullDistShrunk(rows(i),cols(j),:)),'LineWidth',2)
-            axis([0 250 0 maxGC])
+            plot(freqs,squeeze(trueGC(rows(i),cols(j),:)),'Linewidth',1)
+            title(['error = ' num2str(errors(i,j))])
+            axis([0 fs/2 0 maxGC])
         end
     end
 end
 subplot(numVar,numVar,1)
-title(['row: ' num2str(min(rows)) '-' num2str(max(rows)) ' col: ' num2str(min(cols)) '-' num2str(max(cols))])
-ylabel('GC Power')
+%title(['row: ' num2str(min(rows)) '-' num2str(max(rows)) ' col: ' num2str(min(cols)) '-' num2str(max(cols))])
 xlabel('Frequency')
 
 % for reference in figure
 subplot(numVar,numVar,2)
-legend('Actual','Null')
+legend('Predicted','Null','Truth')
 subplot(numVar, numVar, numVar^2)
+title(['SpurErr = ' num2str(spurError) ', lostErr = ' num2str(lostError)])
 xlabel(['Max GC = ' num2str(maxGC) '      points/eval = ' num2str(pointsPerEval)])
 ylabel(['Model order = ' num2str(modelOrder)])
 
+
 %%
 % establish the significance image and plot it
-crunchedGC = squeeze(sum(specGCShrunk,3))/(fs/2);
-crunchedNull = squeeze(sum(nullDistShrunk,3))/(fs/2);
-sigImage = (crunchedGC > crunchedNull);
-
-figure
-subplot(1,3,1)
-imagesc(crunchedGC)
-title('GC')
-set(gca, 'CLim', [0,greatestMax(crunchedGC)]);   
-colorbar
-subplot(1,3,2)
-imagesc(crunchedNull)
-title('Null Dist')
-set(gca, 'CLim', [0,greatestMax(crunchedGC)]);   
-colorbar
-subplot(1,3,3)
-imagesc(sigImage)
-title('GCs above null dist')
+% crunchedGC = squeeze(sum(specGCShrunk,3))/(fs/2);
+% crunchedNull = squeeze(sum(nullDistShrunk,3))/(fs/2);
+% sigImage = (crunchedGC > crunchedNull);
+% 
+% figure
+% subplot(1,3,1)
+% imagesc(crunchedGC)
+% title('GC')
+% set(gca, 'CLim', [0,greatestMax(crunchedGC)]);   
+% colorbar
+% subplot(1,3,2)
+% imagesc(crunchedNull)
+% title('Null Dist')
+% set(gca, 'CLim', [0,greatestMax(crunchedGC)]);   
+% colorbar
+% subplot(1,3,3)
+% imagesc(sigImage)
+% title('GCs above null dist')
 
 
 %%

@@ -1,9 +1,9 @@
-figs = [66:67];
-numVars = 2;
+figs = [1:6];
+numVars = 3;
 
 isSgramsNotGC = 0;
 
-clim = 0.5;
+clim = 0.3;
 maxY = 100;
 
 

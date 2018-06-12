@@ -30,8 +30,11 @@ topChans = 1:4;
 midChans = 5:8;
 deepChans = 9:12;
 refChans = 1:16;
+grouping = 0;   % group into sup/mid/deep or no?
+getCSD = 1;     % calculate CSD?
+dontCAR = 0;    % don't do CAR
 
-channelsToUse = 1:16;              % not "bad channels"
+channelsToUse = 1:16;           % not "bad channels"
 detrend = 2;                    % 0 = no detrend, 1 = pre-bip, 2 = post-bip
 fs = 1000;                      % sampling rate of new data (Hz)
 showAlignedSgrams = 0;          % show sgrams of unfiltered data
@@ -198,15 +201,27 @@ newSaccData = tempSaccData - saccCAR;
 
 % reassignment
 for i = 1:nTrials
-    data(i).targlfpbip = squeeze(...
-        [mean(newTargData(topChans,:,i)) ; 
-        mean(newTargData(midChans,:,i)) ; 
-        mean(newTargData(deepChans,:,i))]);
-    
-    data(i).sacclfpbip = squeeze(...
-        [mean(newSaccData(topChans,:,i)) ; 
-        mean(newSaccData(midChans,:,i)) ; 
-        mean(newSaccData(deepChans,:,i))]);
+    if grouping
+        data(i).targlfpbip = squeeze(...
+            [mean(newTargData(topChans,:,i)) ;
+            mean(newTargData(midChans,:,i)) ;
+            mean(newTargData(deepChans,:,i))]);
+        
+        data(i).sacclfpbip = squeeze(...
+            [mean(newSaccData(topChans,:,i)) ;
+            mean(newSaccData(midChans,:,i)) ;
+            mean(newSaccData(deepChans,:,i))]);
+    else
+        data(i).targlfpbip = squeeze(newTargData(:,:,i));
+        data(i).sacclfpbip = squeeze(newSaccData(:,:,i));
+    end
+end
+
+if dontCAR
+    for i = 1:nTrials
+        data(i).targlfpbip = data(i).targlfpmat;
+        data(i).sacclfpbip = data(i).sacclfpmat;
+    end
 end
 
 
@@ -221,6 +236,21 @@ if showBipSgrams
 end
 
 toc
+
+clear newTargData newSaccData notchedData targCAR saccCAR
+
+%% CSD calculation
+
+if getCSD && ~grouping
+    el_pos = [topChans midChans deepChans];
+    for i = 1:nTrials
+        [data(i).targcsd,~] = compute_iCSD(data(i).targlfpbip(el_pos,:),el_pos*1e-3,0);
+        [data(i).sacccsd,~] = compute_iCSD(data(i).sacclfpbip(el_pos,:),el_pos*1e-3,0);
+        %[csd,zs]=compute_iCSD(csd_input,el_pos*1e-3,0);
+    end
+end
+
+
 
 %% Detrend (post-BiP)
 
@@ -246,6 +276,8 @@ if showDetrendSgrams
     subplot(3,3,1)
     title(['Post - detrend, trial ' num2str(trialNum)])
 end
+
+clear tempTargDataIn tempTargDataOut tempSaccDataIn tempSaccDataOut tempTargData tempSaccData
 
 %% Downsampling
 if length(data(1).targlfpmat)-1 ~= fs  % only downsample if not done yet!

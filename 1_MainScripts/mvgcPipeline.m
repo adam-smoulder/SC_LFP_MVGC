@@ -254,7 +254,7 @@ for i=1:numVar
             imagesc(specTime,freqs,squeeze(specGC(:,i,j,:))', [0, maxGC]) % why do I need to invert this? imagesc is weird :(
             ylabel('Frequency (Hz)')
             axis xy
-            axis([0 1 0 50])
+            axis([0 1 0 100])
             %axis([-inf, inf, 0, 25])
             colormap jet
             set(gca, 'CLim', [0,maxGC]);

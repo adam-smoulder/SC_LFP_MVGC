@@ -60,15 +60,16 @@ clear dataToUse;
 
 %% Model order estimation
 range = [450 650];
-X4mo = X(:,range(1):range(2),:);
+%X4mo = X(:,range(1):range(2),:);
+X4mo = X;
 
 ptic('\n*** tsdata_to_infocrit\n');
 [AIC,BIC,moAIC,moBIC] = tsdata_to_infocrit(X4mo,momax,icregmode);
 ptoc('*** tsdata_to_infocrit took ');
 
 % Plot information criteria. 
-figureCount = figureCount+1;
-figure(figureCount); clf;
+%figureCount = figureCount+1;
+figure(); clf;
 order = 1:momax;
 hold on
 plot(order,AIC,'LineWidth',2)
